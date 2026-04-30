@@ -1,0 +1,18 @@
+# Logs
+logs/
+*.log
+*.out
+*.err
+
+# Large data files
+Processed Data/
+raw_data/
+*.csv
+*.tif
+*.zip
+*.rds
+
+# Cache
+step05_gbif_cache/
+step05_env_data/
+.cache/
