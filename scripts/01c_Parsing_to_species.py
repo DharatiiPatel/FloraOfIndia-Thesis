@@ -2,14 +2,12 @@ import re
 import csv
 from pathlib import Path
 
-# Base paths for Sapelo
 BASE_DIR = Path("/scratch/dp23301/Thesis")
-RAW_DIR = BASE_DIR / "raw_data"           # <-- your folder with all TXT volumes
+RAW_DIR = BASE_DIR / "raw_data"          
 PROCESSED_DIR = BASE_DIR / "Processed Data"
 OUTPUT_CSV = PROCESSED_DIR / "flora_of_india_species_descriptions.csv"
 
-# Regex to catch numbered headings like "15. Anemone tetrasepala Royle ..."
-HEADING_PATTERN = re.compile(r"\n\s*(\d+)\.\s+([A-Z][^\n]+)")
+HEADING_PATTERN = re.compile(r"\n\s*(\d+)\.\s+([A-Z][^\n]+)") # regex to catch numbered headings like "15. Anemone tetrasepala Royle ..."
 
 
 def extract_blocks_from_text(text: str):

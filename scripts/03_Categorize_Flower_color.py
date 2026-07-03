@@ -5,17 +5,12 @@ BASE_DIR = Path("/scratch/dp23301/Thesis")
 INPUT_CSV = BASE_DIR / "Processed Data" / "flora_of_india_flower_color_qwen.csv"
 OUTPUT_CSV = BASE_DIR / "Processed Data" / "flora_of_india_flower_color_categories.csv"
 
-# -----------------------------
-# Category lookup logic
-# -----------------------------
-
 def categorize_color(text: str) -> str:
-    if not text or text.strip() == "":
+    if not text or text.strip() == "": #if the text is empty or conatins whitespaces then return unknowmn
         return "UNKNOWN"
     
-    t = text.lower()
+    t = text.lower() #converts the entire inp to lowercase
 
-    # Core color groups
     if "white" in t or "whitish" in t:
         return "WHITE"
     if "yellow" in t or "golden" in t or "pale yellow" in t or "bright yellow" in t:
@@ -29,11 +24,10 @@ def categorize_color(text: str) -> str:
     if "greenish" in t:
         return "GREENISH"
     
-    # If explicit "no flower colour mentioned"
+    
     if "no flower colour" in t:
         return "UNKNOWN"
 
-    # Catch-all for rare/complex cases
     return "OTHER"
 
 

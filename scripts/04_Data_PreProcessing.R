@@ -1,15 +1,8 @@
 #!/usr/bin/env Rscript
 
-# ---------------------------
-# Step 04: Data preprocessing
-# Flora of India flower color dataset
-# ---------------------------
+options(stringsAsFactors = FALSE) #prevents R from converting strings to factors automatically.
+options(bitmapType = "cairo") #prevents R from using X11 for graphics.
 
-options(stringsAsFactors = FALSE)
-# Render PNGs without an X11 display (needed on headless clusters)
-options(bitmapType = "cairo")
-
-# Paths
 base_dir <- "/scratch/dp23301/Thesis"
 in_file  <- file.path(base_dir, "Processed Data", "flora_of_india_flower_color_categories.csv")
 
@@ -24,73 +17,47 @@ out_summary_raw  <- file.path(out_dir, "summary_color_free_text_top50.csv")
 fig_cat_bar      <- file.path(out_dir, "fig_color_category_counts.png")
 fig_known_bar    <- file.path(out_dir, "fig_known_color_category_counts.png")
 
-# Packages (use base R only to avoid install issues on cluster)
-# If you prefer ggplot2 later, we can add it.
-
 message("Reading input: ", in_file)
 df <- read.csv(in_file, encoding = "UTF-8")
 
 # Expected columns:
 # species_id, volume, flower_color_free_text, color_category
-needed <- c("species_id", "volume", "flower_color_free_text", "color_category")
-missing <- setdiff(needed, names(df))
-if (length(missing) > 0) {
+needed <- c("species_id", "volume", "flower_color_free_text", "color_category") #c creates a vector of column names that are needed in the dataframe.
+missing <- setdiff(needed, names(df)) #returns elements that are in needed but not in names(df)
+if (length(missing) > 0) { #checks if missing vector has any elements
   stop("Missing required columns: ", paste(missing, collapse = ", "))
 }
-
-# ---------------------------
-# 1) Basic cleaning
-# ---------------------------
-df$species_id <- trimws(df$species_id)
+#Basic cleaning
+df$species_id <- trimws(df$species_id) 
 df$flower_color_free_text <- trimws(df$flower_color_free_text)
 df$color_category <- trimws(df$color_category)
 
-# Normalize category labels (safety)
 df$color_category <- toupper(df$color_category)
-df$color_category[df$color_category == ""] <- "UNKNOWN"
-df$color_category[is.na(df$color_category)] <- "UNKNOWN"
+df$color_category[df$color_category == ""] <- "UNKNOWN" #assigns "UNKNOWN" to empty strings.
+df$color_category[is.na(df$color_category)] <- "UNKNOWN" #returns true for NA values and assigns "UNKNOWN" to them.
 
-# ---------------------------
-# 2) Extract genus + species epithet (to filter to species-level)
-#    Many entries are genus-level keys like "Mangifera L."
-#    Species-level typically has at least: Genus species
-# ---------------------------
-
-# Remove leading numbering like "15. "
-species_name <- gsub("^[0-9]+\\.?\\s*", "", df$species_id)
+#Extract genus and epithet
+species_name <- gsub("^[0-9]+\\.?\\s*", "", df$species_id) #removes leading numbering like "15. "
 
 # Keep first two tokens as "Genus species" when possible
-tokens <- strsplit(species_name, "\\s+")
-genus <- sapply(tokens, function(x) if (length(x) >= 1) x[1] else NA)
-epithet <- sapply(tokens, function(x) if (length(x) >= 2) x[2] else NA)
+tokens <- strsplit(species_name, "\\s+") #splits the species name into tokens separated by whitespace.
+genus <- sapply(tokens, function(x) if (length(x) >= 1) x[1] else NA) #returns the first token as genus. sapply applies the function to each element of the tokens vector.
+epithet <- sapply(tokens, function(x) if (length(x) >= 2) x[2] else NA) #returns the second token as epithet.
 
-# Species-level rule: epithet exists AND is lowercase-ish (often true for species epithet)
 is_species_level <- !is.na(epithet) & grepl("^[a-z]", epithet)
 
-df$genus <- genus
+df$genus <- genus #adds three new columns to the dataframe 
 df$epithet <- epithet
 df$is_species_level <- is_species_level
 
-# ---------------------------
-# 3) Save cleaned full dataset
-# ---------------------------
-write.csv(df, out_clean_all, row.names = FALSE)
+write.csv(df, out_clean_all, row.names = FALSE) #R adds an extra first col with row numbers which is not useful
 message("Saved cleaned dataset (all records): ", out_clean_all)
 
-# ---------------------------
-# 4) Create a species-only dataset (recommended for analysis)
-# ---------------------------
-df_species <- df[df$is_species_level, ]
+df_species <- df[df$is_species_level, ] #filters the dataframe to only include rows where is_species_level is true.
 
-# Optional: remove UNKNOWN for some analyses (keep a copy with UNKNOWN too)
 write.csv(df_species, out_clean_species, row.names = FALSE)
 message("Saved cleaned dataset (species-only): ", out_clean_species)
 
-# ---------------------------
-# 5) Summaries
-# ---------------------------
-
-# Category counts (all)
 cat_counts <- sort(table(df$color_category), decreasing = TRUE)
 summary_cat <- data.frame(
   color_category = names(cat_counts),
@@ -99,19 +66,14 @@ summary_cat <- data.frame(
 write.csv(summary_cat, out_summary_cat, row.names = FALSE)
 message("Saved summary: ", out_summary_cat)
 
-# Top 50 raw free-text outputs
-raw_counts <- sort(table(df$flower_color_free_text), decreasing = TRUE)
-top_n <- min(50, length(raw_counts))
-summary_raw <- data.frame(
-  flower_color_free_text = names(raw_counts)[1:top_n],
-  n = as.integer(raw_counts[1:top_n])
+raw_counts <- sort(table(df$flower_color_free_text), decreasing = TRUE) 
+top_n <- min(50, length(raw_counts)) #returns the minimum of 50 and the length of the raw_counts vector.
+summary_raw <- data.frame( #creates a new dataframe with the top 50 most frequent flower color free text values and their counts.
+  flower_color_free_text = names(raw_counts)[1:top_n], #names(raw_counts) returns the names of the raw_counts vector. [1:top_n] returns the first top_n elements.
+  n = as.integer(raw_counts[1:top_n]) #as.integer converts the raw_counts vector to integers.
 )
 write.csv(summary_raw, out_summary_raw, row.names = FALSE)
 message("Saved summary: ", out_summary_raw)
-
-# ---------------------------
-# 6) Plots (base R)
-# ---------------------------
 
 png(fig_cat_bar, width = 1200, height = 700)
 par(mar = c(10, 5, 3, 1))
@@ -134,9 +96,6 @@ barplot(known_counts,
 dev.off()
 message("Saved figure: ", fig_known_bar)
 
-# ---------------------------
-# 7) Print key numbers for your notes / report
-# ---------------------------
 total_records <- nrow(df)
 unique_species_id <- length(unique(df$species_id))
 total_species_only <- nrow(df_species)

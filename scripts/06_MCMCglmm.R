@@ -1,25 +1,9 @@
 #!/usr/bin/env Rscript
 
-# =============================================================================
-# Step 06: MCMCglmm Statistical Analysis
-# Flora of India - Flower Colour & Environment Analysis
-# =============================================================================
-# This script:
-#   1. Loads species x environment PCA scores from step 05b
-#   2. Fits Bayesian hierarchical threshold models (MCMCglmm)
-#      for each flower colour (WHITE, YELLOW, REDTYPE)
-#   3. Uses phylogenetic covariance as random effect (if available)
-#      OR genus/family as random effects (fallback)
-#   4. Checks convergence (Gelman-Rubin diagnostics)
-#   5. Runs single-variable models for individual environmental factors
-#   6. Saves all results and figures
-# =============================================================================
-
 .libPaths(c("~/R/library", .libPaths()))
 options(stringsAsFactors = FALSE)
 options(bitmapType = "cairo")
 
-# ── Packages ──────────────────────────────────────────────────────────────────
 required_packages <- c("MCMCglmm", "ape", "coda")
 for (pkg in required_packages) {
   if (!requireNamespace(pkg, quietly = TRUE)) {
@@ -28,47 +12,52 @@ for (pkg in required_packages) {
   library(pkg, character.only = TRUE)
 }
 
-# ── Paths ─────────────────────────────────────────────────────────────────────
 base_dir   <- "/scratch/dp23301/Thesis"
 input_file <- file.path(base_dir, "Processed Data/step05_outputs/species_color_environment_final.csv")
-output_dir <- file.path(base_dir, "Processed Data/step06_outputs")
-fig_dir    <- file.path(output_dir, "figures")
+output_dir  <- file.path(base_dir, "Processed Data/step06_outputs")
+fig_dir     <- file.path(output_dir, "figures")
+dir_tables  <- file.path(output_dir, "tables")
+dir_models  <- file.path(output_dir, "models")
+dir_combined  <- file.path(dir_tables, "combined")
+dir_fixed     <- file.path(dir_tables, "fixed_effects")
+dir_converge  <- file.path(dir_tables, "convergence")
+dir_random    <- file.path(dir_tables, "random_effects")
 
-dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-dir.create(fig_dir,    recursive = TRUE, showWarnings = FALSE)
+dir.create(fig_dir,       recursive = TRUE, showWarnings = FALSE)
+dir.create(dir_combined,   recursive = TRUE, showWarnings = FALSE)
+dir.create(dir_fixed,     recursive = TRUE, showWarnings = FALSE)
+dir.create(dir_converge,  recursive = TRUE, showWarnings = FALSE)
+dir.create(dir_random,    recursive = TRUE, showWarnings = FALSE)
+dir.create(dir_models,    recursive = TRUE, showWarnings = FALSE)
 
-# ── MCMC Settings (matching original paper) ───────────────────────────────────
 NITT    <- 1050000   # total iterations
 BURNIN  <- 50000     # burn-in
 THIN    <- 100       # thinning interval
 # Effective samples = (1050000 - 50000) / 100 = 10000
 
-# Prior: weak prior for random effect variance
-# V=1, nu=0.002 matches original paper
 PRIOR <- list(
-  R = list(V = 1, fix = 1),
-  G = list(G1 = list(V = 1, nu = 0.002))
+  R = list(V = 1, fix = 1), #prior for the residual variance. in binary threshold models rv is not identifiable from data so we fixed it to 1.
+  G = list(G1 = list(V = 1, nu = 0.002)) #prior for the random effect variance.
 )
 
-# ── Load data ─────────────────────────────────────────────────────────────────
 message("Loading data: ", input_file)
 df <- read.csv(input_file, encoding = "UTF-8")
 
-message("Total species: ", nrow(df))
-message("Colour breakdown:")
+message("Total species: ", nrow(df)) #number of rows in df.
+message("Colour breakdown:") #print the number of species in each color group.
 print(table(df$color_group))
 
 # Check required columns
-pc_cols <- paste0("PC", 1:10)
+pc_cols <- paste0("PC", 1:10) #create a vector of the first 10 pcs.
 missing <- setdiff(c(pc_cols, "is_white", "is_yellow", "is_redtype", "query_name"), names(df))
 if (length(missing) > 0) {
   stop("Missing columns: ", paste(missing, collapse = ", "))
 }
 
 # Extract genus from query_name for random effects
-df$genus  <- sapply(strsplit(df$query_name, " "), function(x) x[1])
+df$genus  <- sapply(strsplit(df$query_name, " "), function(x) x[1]) #sapply splits the query_name column by spaces and then takes the first element of the split.
 
-# ── Helper: run MCMCglmm for one colour ───────────────────────────────────────
+#run MCMCglmm for one colour
 run_mcmc_model <- function(data, response_col, label, random_formula = "~ genus") {
 
   message("\n", strrep("─", 60))
@@ -76,26 +65,26 @@ run_mcmc_model <- function(data, response_col, label, random_formula = "~ genus"
   message(strrep("─", 60))
 
   # Build formula
-  fixed_formula  <- as.formula(paste(response_col, "~", paste(pc_cols, collapse = " + ")))
+  fixed_formula  <- as.formula(paste(response_col, "~", paste(pc_cols, collapse = " + "))) #.formula converts the string to a formula object because the MCMCglmm function expects a formula object and not string
   random_formula <- as.formula(random_formula)
 
-  message("Fixed formula: ", deparse(fixed_formula))
+  message("Fixed formula: ", deparse(fixed_formula)) #deparse converts the formula object to a string.
   message("N species: ", nrow(data))
   message("N positive: ", sum(data[[response_col]]))
 
-  set.seed(42)
+  set.seed(42) #set the seed to 42 so that the results are reproducible.
 
   model <- tryCatch({
     MCMCglmm(
       fixed   = fixed_formula,
-      random  = random_formula,
+      random  = random_formula, #This tells the model that observations from the same genus are correlated. The model will estimate a variance component for genus how much of the variation in flower colour is explained by genus membership alone.
       data    = data,
-      family  = "threshold",
+      family  = "threshold", 
       prior   = PRIOR,
       nitt    = NITT,
       burnin  = BURNIN,
       thin    = THIN,
-      verbose = TRUE
+      verbose = TRUE #print progress to the console.
     )
   }, error = function(e) {
     message("ERROR in MCMCglmm: ", conditionMessage(e))
@@ -105,7 +94,7 @@ run_mcmc_model <- function(data, response_col, label, random_formula = "~ genus"
   return(model)
 }
 
-# ── Helper: extract and save results ─────────────────────────────────────────
+#extract and save results 
 save_model_results <- function(model, label, output_dir) {
 
   if (is.null(model)) {
@@ -119,7 +108,7 @@ save_model_results <- function(model, label, output_dir) {
   fixed_df$variable <- rownames(fixed_df)
   fixed_df$color    <- label
 
-  out_fixed <- file.path(output_dir, paste0("fixed_effects_", label, ".csv"))
+  out_fixed <- file.path(dir_fixed, paste0("fixed_effects_", label, ".csv"))
   write.csv(fixed_df, out_fixed, row.names = FALSE)
   message("Saved fixed effects: ", out_fixed)
 
@@ -128,7 +117,7 @@ save_model_results <- function(model, label, output_dir) {
   rand_df <- as.data.frame(rand_summary)
   rand_df$color <- label
 
-  out_rand <- file.path(output_dir, paste0("random_effects_", label, ".csv"))
+  out_rand <- file.path(dir_random, paste0("random_effects_", label, ".csv"))
   write.csv(rand_df, out_rand, row.names = FALSE)
 
   # Gelman-Rubin convergence (need multiple chains - run 3 chains)
@@ -165,7 +154,7 @@ save_model_results <- function(model, label, output_dir) {
     )
   }, error = function(e) NULL)
 
-  if (!is.null(model2) && !is.null(model3)) {
+  if (!is.null(model2) && !is.null(model3)) { #Sol extracts the MCMC samples of the fixed effects (the posterior chains). mcmc.list wraps them into a coda object for convergence analysis.
     chains <- mcmc.list(model$Sol, model2$Sol, model3$Sol)
     gr     <- gelman.diag(chains, multivariate = TRUE)
 
@@ -177,7 +166,7 @@ save_model_results <- function(model, label, output_dir) {
       color     = label
     )
 
-    out_gr <- file.path(output_dir, paste0("gelman_rubin_", label, ".csv"))
+    out_gr <- file.path(dir_converge, paste0("gelman_rubin_", label, ".csv"))
     write.csv(gr_df, out_gr, row.names = FALSE)
     message("MPSRF for ", label, ": ", round(gr$mpsrf, 6))
   }
@@ -191,7 +180,7 @@ save_model_results <- function(model, label, output_dir) {
   return(fixed_df)
 }
 
-# ── Run main models ───────────────────────────────────────────────────────────
+#Run main models 
 colors_to_run <- list(
   list(col = "is_white",   label = "WHITE"),
   list(col = "is_yellow",  label = "YELLOW"),
@@ -215,80 +204,22 @@ for (color_info in colors_to_run) {
   }
 
   # Save model object
-  model_file <- file.path(output_dir, paste0("model_", color_info$label, ".rds"))
+  model_file <- file.path(dir_models, paste0("model_", color_info$label, ".rds"))
   saveRDS(model, model_file)
   message("Saved model: ", model_file)
 }
 
-# ── Combine all fixed effects ─────────────────────────────────────────────────
+#Combine all fixed effects 
 if (length(all_fixed_effects) > 0) {
   combined_effects <- do.call(rbind, all_fixed_effects)
-  write.csv(combined_effects,
-            file.path(output_dir, "all_fixed_effects_combined.csv"),
-            row.names = FALSE)
+  combined_path <- file.path(dir_combined, "all_fixed_effects_combined.csv")
+  write.csv(combined_effects, combined_path, row.names = FALSE)
   message("\nSaved combined fixed effects table")
 }
 
-# ── Single variable models ────────────────────────────────────────────────────
-message("\n", strrep("─", 60))
-message("Running single-variable models...")
-message(strrep("─", 60))
+# Single-variable models: run scripts/06b_SingleVariable_MCMCglmm.R (not here)
 
-# Load PCA loadings to identify top environmental variables
-loadings_file <- file.path(base_dir,
-  "Processed Data/step05_outputs/pca_loadings.csv")
-
-if (file.exists(loadings_file)) {
-
-  loadings <- read.csv(loadings_file)
-  env_vars <- loadings$variable
-
-  single_var_results <- list()
-
-  for (color_info in colors_to_run) {
-    for (env_var in env_vars) {
-
-      if (!env_var %in% names(df)) next
-
-      label_sv <- paste0(color_info$label, "_", env_var)
-      message("  Single var model: ", label_sv)
-
-      formula_sv <- as.formula(paste(color_info$col, "~", env_var))
-
-      sv_model <- tryCatch({
-        MCMCglmm(
-          fixed   = formula_sv,
-          random  = ~ genus,
-          data    = df,
-          family  = "threshold",
-          prior   = PRIOR,
-          nitt    = NITT,
-          burnin  = BURNIN,
-          thin    = THIN,
-          verbose = FALSE
-        )
-      }, error = function(e) NULL)
-
-      if (!is.null(sv_model)) {
-        sv_summary <- as.data.frame(summary(sv_model)$solutions)
-        sv_summary$variable  <- rownames(sv_summary)
-        sv_summary$env_var   <- env_var
-        sv_summary$color     <- color_info$label
-        single_var_results[[label_sv]] <- sv_summary
-      }
-    }
-  }
-
-  if (length(single_var_results) > 0) {
-    sv_combined <- do.call(rbind, single_var_results)
-    write.csv(sv_combined,
-              file.path(output_dir, "single_variable_models.csv"),
-              row.names = FALSE)
-    message("Saved single variable model results")
-  }
-}
-
-# ── Generate coefficient plot ─────────────────────────────────────────────────
+#generate coefficient plot 
 message("\nGenerating coefficient plots...")
 
 if (length(all_fixed_effects) > 0) {
@@ -307,7 +238,7 @@ if (length(all_fixed_effects) > 0) {
   png(file.path(fig_dir, "coefficient_plot_PC1_PC3.png"),
       width = 1200, height = 600)
 
-  par(mfrow = c(1, 3), mar = c(5, 4, 3, 1))
+  par(mfrow = c(1, 3), mar = c(5, 4, 3, 1)) #mfrow sets the layout of the plot. mar sets the margins.
 
   for (col_label in c("WHITE", "YELLOW", "REDTYPE")) {
 
@@ -316,7 +247,7 @@ if (length(all_fixed_effects) > 0) {
 
     if (nrow(sub) == 0) next
 
-    ylim <- range(c(sub$lower, sub$upper), na.rm = TRUE)
+    ylim <- range(c(sub$lower, sub$upper), na.rm = TRUE) #range finds the minimum and maximum values of the lower and upper confidence intervals. na.rm = TRUE removes any NA values.
 
     plot(1:nrow(sub), sub$mean,
          ylim   = ylim,
@@ -324,7 +255,7 @@ if (length(all_fixed_effects) > 0) {
          xlab   = "",
          ylab   = "Coefficient",
          main   = col_label,
-         pch    = 19,
+         pch    = 19, #pch sets the shape of the points.
          col    = ifelse(sub$significant, "black", "grey60"),
          cex    = 1.5)
 
@@ -343,7 +274,6 @@ if (length(all_fixed_effects) > 0) {
   message("Saved coefficient plot")
 }
 
-message("\n── Step 06 Complete ────────────────────────────────────────────")
+message("\n Step 06 Complete ")
 message("Results saved to: ", output_dir)
 message("Figures saved to: ", fig_dir)
-message("────────────────────────────────────────────────────────────────")

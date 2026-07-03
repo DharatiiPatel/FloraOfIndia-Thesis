@@ -10,7 +10,6 @@
 
 
 module load Python/3.13.5-GCCcore-14.3.0
-# export HF_TOKEN="hf_...................." (only for hugging face)
 
 # Store HF cache on scratch 
 export HF_HOME=/scratch/dp23301/.cache/huggingface
