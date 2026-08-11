@@ -9,7 +9,7 @@
 #   * bars always start at a true zero - no truncated baselines
 #   * category labels read horizontally (bars are flipped where labels are long)
 #   * values are printed on the plot, so the reader never measures against a gridline
-#   * one muted palette shared with the CS/method figures (fig_cs*)
+#   * one muted palette shared with the method-depth figures (fig7-fig14)
 #   * no chartjunk: no vertical gridlines behind horizontal bars, no legend when
 #     the fill is already named on the axis
 

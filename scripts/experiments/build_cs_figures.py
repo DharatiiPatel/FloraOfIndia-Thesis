@@ -275,7 +275,7 @@ def fig1_benchmark(data):
 
     fig.suptitle("RQ1  Multi-model benchmark on the 98-item expert gold set",
                  fontsize=12, fontweight="bold", x=0.008, ha="left")
-    save(fig, "fig_cs1_benchmark",
+    save(fig, "fig7_benchmark",
          "Categoriser v1. Intervals are 4,000-replicate bootstrap percentiles.")
 
 
@@ -330,7 +330,7 @@ def fig2_confusion(data):
 
     fig.suptitle("RQ1  Where the errors sit: row-normalised confusion structure",
                  fontsize=12, fontweight="bold", x=0.005, ha="left")
-    save(fig, "fig_cs2_confusion",
+    save(fig, "fig8_confusion",
          "Shading is the proportion of each gold class; printed values are item "
          "counts. OTHER occurs only as a prediction.")
 
@@ -424,7 +424,7 @@ def fig3_flow(data):
 
     fig.suptitle("RQ1  Label flow from gold class to model prediction",
                  fontsize=12, fontweight="bold", x=0.005, ha="left")
-    save(fig, "fig_cs3_label_flow",
+    save(fig, "fig9_label_flow",
          "Ribbon thickness is item count.", caption_y=-0.10)
 
 
@@ -498,7 +498,7 @@ def fig4_taxonomy():
 
     fig.suptitle("RQ2  Error taxonomy: what kind of mistake is each system making?",
                  fontsize=12, fontweight="bold", x=0.005, ha="left")
-    save(fig, "fig_cs4_error_taxonomy",
+    save(fig, "fig10_error_taxonomy",
          "Marker area and printed value are item counts; a cross marks a failure "
          "mode a system never exhibits.")
 
@@ -654,7 +654,7 @@ def fig5_interventions():
     fig.suptitle("RQ3  Interventions: better class mapping, retrieval grounding, "
                  "and abstention", fontsize=12, fontweight="bold",
                  x=0.005, ha="left")
-    save(fig, "fig_cs5_interventions",
+    save(fig, "fig11_interventions",
          "Panel B: one column per gold item, sorted by how many configurations "
          "fail it.")
 
@@ -715,7 +715,7 @@ def fig6_forest():
 
     fig.suptitle("RQ4  Do the ecological associations survive a change of label "
                  "source?", fontsize=12, fontweight="bold", x=0.005, ha="left")
-    save(fig, "fig_cs6_rq4_forest",
+    save(fig, "fig12_rq4_forest",
          "MCMCglmm fixed effects, n = 1,174 species, 3 chains per model "
          "(MPSRF \u2248 1.0). Filled markers are significant at pMCMC < 0.05.",
          caption_y=-0.135)
@@ -820,7 +820,7 @@ def fig7_concordance():
 
     fig.suptitle("RQ4  Coefficient concordance across label sources",
                  fontsize=12, fontweight="bold", x=0.005, ha="left")
-    save(fig, "fig_cs7_rq4_concordance",
+    save(fig, "fig13_rq4_concordance",
          "Each point is one colour \u00d7 PC fixed effect (15 per model); the shaded\n"
          "corridor is \u00b10.02 around the identity line. Open markers are effects whose\n"
          "credible interval spans zero under at least one label source.")

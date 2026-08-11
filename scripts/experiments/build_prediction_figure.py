@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-fig_cs8 — can flower colour be predicted from environment?
+fig14 — can flower colour be predicted from environment?
 
 Follows the same design rules as build_cs_figures.py: estimates carry
 uncertainty, one message per panel, PDF + 400-dpi PNG.
@@ -14,7 +14,7 @@ Panel C  permutation importance. Message: PC2 alone carries the signal, which
          independently reproduces the MCMCglmm result.
 
 READS : Processed Data/experiments/prediction_outputs/
-WRITES: Processed Data/experiments/figures/fig_cs8_prediction.{png,pdf}
+WRITES: Processed Data/experiments/figures/fig14_prediction.{png,pdf}
 """
 
 from __future__ import annotations
@@ -185,10 +185,10 @@ def main():
     )
 
     for ext in ("png", "pdf"):
-        fig.savefig(OUT / f"fig_cs8_prediction.{ext}", dpi=400,
+        fig.savefig(OUT / f"fig14_prediction.{ext}", dpi=400,
                     facecolor="white", bbox_inches=None)
     plt.close(fig)
-    print(f"Saved {OUT}/fig_cs8_prediction.png and .pdf")
+    print(f"Saved {OUT}/fig14_prediction.png and .pdf")
 
 
 if __name__ == "__main__":

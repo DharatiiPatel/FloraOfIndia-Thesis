@@ -17,10 +17,10 @@ The project has two halves:
 Thesis/
 ├── Results/                      ← THESIS WRITING STARTS HERE
 │   ├── figures/
-│   │   ├── main/                 fig1–fig5 (symlinks into Processed Data/figures)
+│   │   ├── main/                 fig1–fig14: ecology (fig1–fig5, symlinks into Processed Data/figures)
+│   │   │                         + method depth RQ1–RQ4 and prediction (fig7–fig14), PNG + PDF
 │   │   ├── supplementary/        trace plots, PC1–PC3 coefficients
-│   │   ├── elevation/            fig6_* elevation suite
-│   │   └── cs_method/            fig_cs1–fig_cs7 (RQ1–RQ4), PNG + PDF
+│   │   └── elevation/            fig6_* elevation suite
 │   └── tables/                   mcmc/, descriptive/, elevation/
 │
 ├── docs/
@@ -45,7 +45,9 @@ Thesis/
 │   │   ├── rag_extract_gold.py           RQ3 RAG + abstention
 │   │   ├── score_rq3_interventions.py    RQ3 scoring
 │   │   ├── wp4_*.{py,R}                  RQ4 label variants + MCMC
-│   │   ├── build_cs_figures.py           all fig_cs* figures
+│   │   ├── build_cs_figures.py           fig7–fig13 (RQ1–RQ4)
+│   │   ├── predict_colour_from_env.py    prediction task
+│   │   ├── build_prediction_figure.py    fig14
 │   │   └── *.slurm                       cluster jobs
 │   └── legacy/                   superseded, kept for provenance
 │
@@ -59,7 +61,7 @@ Thesis/
 │       ├── rq2_outputs/                  RQ2 taxonomy
 │       ├── rq3_outputs/                  RQ3 RAG + intervention scores
 │       ├── wp4_label_variants/results/   RQ4 fixed effects
-│       └── figures/                      canonical fig_cs* output
+│       └── figures/                      canonical fig7–fig14 output
 │
 ├── raw_data/pdfs/                Flora of India source PDFs
 ├── logs/                         SLURM logs (verbose .out → logs/archive/)

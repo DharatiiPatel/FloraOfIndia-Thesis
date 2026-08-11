@@ -237,20 +237,23 @@ Effects significant under **both** the baseline and an LLM source agree to withi
 
 ### CS / method chapters — **generated**
 
-Built by `scripts/experiments/build_cs_figures.py`; 400-dpi PNG + vector PDF in
-`Processed Data/experiments/figures/` (mirrored to `Results/figures/cs_method/`).
+Built by `scripts/experiments/build_cs_figures.py` (fig7–fig13) and
+`build_prediction_figure.py` (fig14); 400-dpi PNG + vector PDF, living
+alongside the ecology figures in `Results/figures/main/` — one flat,
+continuously numbered sequence rather than a separate folder.
 
 | Figure | RQ | What it shows | Why the professor will care |
 |---|---|---|---|
-| `fig_cs1_benchmark` | RQ1 | Accuracy and κ as dot plots with 4,000-replicate bootstrap intervals, plus per-class F₁ heatmap | Open LLMs beat rules; 7B vs 72B intervals overlap, so scale genuinely does not help |
-| `fig_cs2_confusion` | RQ1 | Row-normalised confusion structure, four models | Exactly *which* classes confuse — REDTYPE is the weak class everywhere |
-| `fig_cs3_label_flow` | RQ1 | Alluvial gold → predicted, baseline vs Qwen-7B | Baseline bleeds into UNKNOWN/OTHER (recall failure); LLM error is a thin REDTYPE band |
-| `fig_cs4_error_taxonomy` | RQ2 | Bubble matrix of failure modes × system, with totals | Specificity failure modes, and the qualitative shift from recall to adjudication errors |
-| `fig_cs5_interventions` | RQ3 | Slopegraph cat. v1→v2, plus item-level grid of every item any configuration fails or abstains on | Directly answers “did RAG/specificity help?”, and exposes the irreducible hard core |
-| `fig_cs6_rq4_forest` | RQ4 | Forest of all colour × PC effects under four label sources | Which associations survive a change of label source |
-| `fig_cs7_rq4_concordance` | RQ4 | Coefficient concordance vs identity line, significance-coded | Links NLP quality to science: significant effects agree to within 0.023 |
+| `fig7_benchmark` | RQ1 | Accuracy and κ as dot plots with 4,000-replicate bootstrap intervals, plus per-class F₁ heatmap | Open LLMs beat rules; 7B vs 72B intervals overlap, so scale genuinely does not help |
+| `fig8_confusion` | RQ1 | Row-normalised confusion structure, four models | Exactly *which* classes confuse — REDTYPE is the weak class everywhere |
+| `fig9_label_flow` | RQ1 | Alluvial gold → predicted, baseline vs Qwen-7B | Baseline bleeds into UNKNOWN/OTHER (recall failure); LLM error is a thin REDTYPE band |
+| `fig10_error_taxonomy` | RQ2 | Bubble matrix of failure modes × system, with totals | Specificity failure modes, and the qualitative shift from recall to adjudication errors |
+| `fig11_interventions` | RQ3 | Slopegraph cat. v1→v2, plus item-level grid of every item any configuration fails or abstains on | Directly answers “did RAG/specificity help?”, and exposes the irreducible hard core |
+| `fig12_rq4_forest` | RQ4 | Forest of all colour × PC effects under four label sources | Which associations survive a change of label source |
+| `fig13_rq4_concordance` | RQ4 | Coefficient concordance vs identity line, significance-coded | Links NLP quality to science: significant effects agree to within 0.023 |
+| `fig14_prediction` | prediction task | Macro-F1 under genus-grouped CV, grouped vs ungrouped comparison, permutation importance | Environment barely beats the majority floor; genus predicts colour ~3x better than climate/soil |
 
-Abstention is reported inside `fig_cs5` (hatched cells) rather than as a separate
+Abstention is reported inside `fig11_interventions` (hatched cells) rather than as a separate
 accuracy–coverage curve, since a single abstention threshold gives only one operating point.
 
 **Not yet made:** cost vs accuracy (GPU-hours). Needs Slurm accounting to be pulled from
