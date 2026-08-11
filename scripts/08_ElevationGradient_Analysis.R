@@ -16,9 +16,14 @@ library(tidyr)
 library(scales)
 
 base_dir    <- "/scratch/dp23301/Thesis"
-input_pca   <- file.path(base_dir, "Processed Data/step05_outputs/species_color_environment_final.csv")
-input_env   <- file.path(base_dir, "Processed Data/step05_outputs/species_environment_trimmed.csv")
-output_dir  <- file.path(base_dir, "Processed Data/step08_outputs")
+
+# Publication styling for the bar charts lives here so that
+# scripts/rebuild_bar_figures.R and this script cannot drift apart.
+source(file.path(base_dir, "scripts/figure_style.R"))
+
+input_pca   <- file.path(base_dir, "Processed Data/experiments/step05b_outputs_clean/species_color_environment_final_clean.csv")
+input_env   <- file.path(base_dir, "Processed Data/experiments/step05b_outputs_clean/species_environment_trimmed.csv")
+output_dir  <- file.path(base_dir, "Processed Data/step08_outputs_clean")
 fig_dir     <- file.path(output_dir, "figures")
 
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
@@ -200,7 +205,7 @@ write.csv(pc2_by_band, file.path(output_dir, "pc2_by_elevation_band.csv"), row.n
 message("\nGenerating elevation figures...")
 
 save_fig <- function(out_path, plot, w, h) {
-  ggsave(out_path, plot, width = w, height = h, dpi = 150, bg = "white")
+  ggsave(out_path, plot, width = w, height = h, dpi = 300, bg = "white")
   message("  Saved: ", basename(out_path))
 }
 
@@ -212,23 +217,9 @@ prop_df <- band_summary %>%
     pct_white = "WHITE", pct_yellow = "YELLOW", pct_redtype = "REDTYPE"
   ))
 
-p_prop <- ggplot(prop_df, aes(x = elev_band, y = pct, fill = colour)) +
-  geom_col(position = "stack", width = 0.75, colour = "white") +
-  scale_fill_manual(values = COLOR_PANEL, name = "Colour group") +
-  labs(
-    title = "Flower Colour Composition across Elevation Bands",
-    subtitle = "India - Flora of India analysis dataset (n species per band shown)",
-    x = NULL, y = "Percentage of species (%)"
-  ) +
-  geom_text(
-    data = band_summary,
-    aes(x = elev_band, y = 102, label = paste0("n=", n_species)),
-    inherit.aes = FALSE, size = 3.5, fontface = "bold"
-  ) +
-  theme_paper +
-  theme(axis.text.x = element_text(size = 9))
+p_prop <- plot_elev_proportions(prop_df, band_summary)
 
-save_fig(file.path(fig_dir, "fig6_elevation_colour_proportions.png"), p_prop, 10, 6)
+save_fig(file.path(fig_dir, "fig6_elevation_colour_proportions.png"), p_prop, 8.6, 4.8)
 
 # Fig B: Species count by band (stacked absolute)
 count_df <- band_summary %>%
@@ -238,18 +229,9 @@ count_df <- band_summary %>%
     n_white = "WHITE", n_yellow = "YELLOW", n_redtype = "REDTYPE"
   ))
 
-p_count <- ggplot(count_df, aes(x = elev_band, y = n, fill = colour)) +
-  geom_col(position = "stack", width = 0.75, colour = "white") +
-  scale_fill_manual(values = COLOR_PANEL, name = "Colour group") +
-  scale_y_continuous(labels = comma) +
-  labs(
-    title = "Species Counts by Elevation Band and Flower Colour",
-    x = NULL, y = "Number of species"
-  ) +
-  theme_paper +
-  theme(axis.text.x = element_text(size = 9))
+p_count <- plot_elev_counts(count_df, band_summary)
 
-save_fig(file.path(fig_dir, "fig6_elevation_species_counts.png"), p_count, 10, 6)
+save_fig(file.path(fig_dir, "fig6_elevation_species_counts.png"), p_count, 9.2, 4.8)
 
 # Fig C: Altitude distribution by colour (density)
 p_density <- ggplot(df, aes(x = alt, fill = color_group)) +

@@ -17,6 +17,10 @@ library(tidyr)
 library(scales)
 
 base_dir   <- "/scratch/dp23301/Thesis"
+
+# Publication styling for the bar charts (fig1, fig4, fig5) lives here so that
+# scripts/rebuild_bar_figures.R and this script cannot drift apart.
+source(file.path(base_dir, "scripts/figure_style.R"))
 step04_dir <- file.path(base_dir, "Processed Data/step04_outputs")
 step05_dir <- file.path(base_dir, "Processed Data/step05_outputs")
 step06_dir   <- file.path(base_dir, "Processed Data/step06_outputs")
@@ -155,20 +159,11 @@ message("Figure 1: Colour counts...")
 
 color_counts <- df_species %>%
   filter(!color_category %in% c("UNKNOWN", "OTHER", "GREENISH")) %>%
-  count(color_category, name = "n") %>%
-  mutate(color_category = factor(color_category, levels = color_category[order(-n)]))
+  count(color_category, name = "n")
 
-p1 <- ggplot(color_counts, aes(x = color_category, y = n, fill = color_category)) +
-  geom_col(width = 0.7, colour = "white", linewidth = 0.8) +
-  geom_text(aes(label = n), vjust = -0.4, fontface = "bold", size = 4) +
-  scale_fill_manual(values = BAR_COLORS, guide = "none") +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
-  labs(title = "Flower Colour Distribution — Flora of India",
-       x = NULL, y = "Number of Species") +
-  theme_paper +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, face = "bold"))
+p1 <- plot_colour_counts(color_counts)
 
-save_fig(file.path(fig_dir, "fig1_colour_counts.png"), p1, 9, 6)
+save_fig(file.path(fig_dir, "fig1_colour_counts.png"), p1, 8.0, 4.4, dpi = 300)
 
 
 message("Figure 3: PCA loadings...")
@@ -259,34 +254,9 @@ if (has_sv) {
 
 message("Figure 4: Convergence diagnostics...")
 
-gr_plot <- gr_all %>%
-  filter(variable != "(Intercept)", grepl("^PC", variable)) %>%
-  mutate(
-    color     = factor(color, levels = c("WHITE", "YELLOW", "REDTYPE")),
-    variable  = factor(variable, levels = paste0("PC", 1:10)),
-    converged = point_est < 1.1,
-    # Rescale for visibility: plot deviation above 0.998 baseline
-    psrf_plot = point_est - 0.998
-  )
+p4 <- plot_convergence(gr_all)
 
-p4 <- ggplot(gr_plot, aes(x = variable, y = psrf_plot, fill = converged)) +
-  geom_col(width = 0.75, colour = "white") +
-  geom_hline(yintercept = 1.1 - 0.998, linetype = "dashed", colour = "#E74C3C", linewidth = 0.8) +
-  geom_hline(yintercept = 1.0 - 0.998, linetype = "solid", colour = "grey50", linewidth = 0.4) +
-  facet_wrap(~ color, nrow = 1) +
-  scale_fill_manual(values = c("TRUE" = "#2ECC71", "FALSE" = "#E74C3C"),
-                    labels = c("Converged", "Not converged"), name = NULL) +
-  scale_y_continuous(
-    breaks = seq(0, 0.15, by = 0.02),
-    labels = function(x) sprintf("%.3f", x + 0.998)
-  ) +
-  labs(title = "Gelman–Rubin PSRF Convergence Diagnostics",
-       subtitle = "Dashed red line = 1.1 threshold; all models converged (PSRF ≈ 1.000)",
-       x = NULL, y = "PSRF") +
-  theme_paper +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-save_fig(file.path(fig_dir, "fig4_convergence.png"), p4, 12, 5)
+save_fig(file.path(fig_dir, "fig4_convergence.png"), p4, 10.5, 4.0, dpi = 300)
 
 
 message("Figure 5: Pipeline summary...")
@@ -298,24 +268,14 @@ n_gbif     <- length(list.files(file.path(base_dir, "Processed Data/step05_gbif_
 n_analysis <- nrow(read.csv(file.path(step05_dir, "species_color_environment_final.csv")))
 
 pipe_df <- tibble(
-  stage = factor(c("Parsed blocks", "Species-level records", "Known flower colour",
-                   "GBIF matched", "Final analysis"),
-                 levels = c("Parsed blocks", "Species-level records", "Known flower colour",
-                              "GBIF matched", "Final analysis")),
-  n = c(n_parsed, n_species, n_known, n_gbif, n_analysis)
+  stage = c("Parsed text blocks", "Species-level records", "Known flower colour",
+            "GBIF matched", "Final analysis set"),
+  n     = c(n_parsed, n_species, n_known, n_gbif, n_analysis)
 )
 
-p5 <- ggplot(pipe_df, aes(x = stage, y = n, fill = stage)) +
-  geom_col(width = 0.7, colour = "white") +
-  geom_text(aes(label = comma(n)), vjust = -0.4, fontface = "bold") +
-  scale_fill_manual(values = colorRampPalette(c("#78B0C5", "#B35D45"))(5), guide = "none") +
-  scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.12))) +
-  labs(title = "Data Pipeline — Species Retention (Flora of India)",
-       x = NULL, y = "Number of records / species") +
-  theme_paper +
-  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+p5 <- plot_pipeline(pipe_df)
 
-save_fig(file.path(fig_dir, "fig5_pipeline_summary.png"), p5, 10, 6)
+save_fig(file.path(fig_dir, "fig5_pipeline_summary.png"), p5, 8.6, 4.4, dpi = 300)
 
 
 message("Supplementary: Trace plots...")

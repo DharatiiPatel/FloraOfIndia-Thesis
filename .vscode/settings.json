@@ -1,3 +1,43 @@
 {
-    "chatgpt.openOnStartup": true
+  "chatgpt.openOnStartup": true,
+
+  // Hidden from the Explorer: caches, installed libraries and the figure
+  // virtualenv. Nothing here is source or results - it is ~10,700 of the
+  // ~11,700 files in the workspace. Set any entry to false to show it again.
+  "files.exclude": {
+    "**/__pycache__": true,
+    ".venv_figs": true,
+    "R_library": true,
+    "Processed Data/step05_gbif_cache": true,
+    "Processed Data/experiments/gbif_cache_clean": true,
+    "Processed Data/experiments/reocr_text": true
+  },
+
+  // Keep the same noise out of Ctrl+Shift+F results.
+  "search.exclude": {
+    "**/__pycache__": true,
+    ".venv_figs": true,
+    "R_library": true,
+    "Processed Data/step05_gbif_cache": true,
+    "Processed Data/experiments/gbif_cache_clean": true,
+    "Processed Data/step05_env_data": true,
+    "logs": true
+  },
+
+  // Do not run a filesystem watcher over large static trees.
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/__pycache__/**": true,
+    ".venv_figs/**": true,
+    "R_library/**": true,
+    "Processed Data/**": true,
+    "logs/**": true
+  },
+
+  "explorer.sortOrder": "type",
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    "*.png": "${capture}.pdf"
+  }
 }

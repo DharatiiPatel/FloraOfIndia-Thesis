@@ -16,8 +16,8 @@ args <- commandArgs(trailingOnly = TRUE)
 color_filter <- if (length(args) >= 1 && nzchar(args[1])) toupper(args[1]) else NULL
 
 base_dir   <- "/scratch/dp23301/Thesis"
-input_file <- file.path(base_dir, "Processed Data/step05_outputs/species_color_environment_final.csv")
-output_dir <- file.path(base_dir, "Processed Data/step06_outputs")
+input_file <- file.path(base_dir, "Processed Data/experiments/step05b_outputs_clean/species_color_environment_final_clean.csv")
+output_dir <- file.path(base_dir, "Processed Data/step06_outputs_clean")
 dir_combined <- file.path(output_dir, "tables/combined")
 dir.create(dir_combined, recursive = TRUE, showWarnings = FALSE)
 out_csv    <- file.path(dir_combined, "single_variable_models.csv")
@@ -41,8 +41,8 @@ message("Loading data: ", input_file)
 df <- read.csv(input_file, encoding = "UTF-8")
 df$genus <- sapply(strsplit(df$query_name, " "), function(x) x[1])
 
-env_file <- file.path(base_dir, "Processed Data/step05_outputs/species_environment_trimmed.csv")
-loadings <- read.csv(file.path(base_dir, "Processed Data/step05_outputs/pca_loadings.csv"))
+env_file <- file.path(base_dir, "Processed Data/experiments/step05b_outputs_clean/species_environment_trimmed.csv")
+loadings <- read.csv(file.path(base_dir, "Processed Data/experiments/step05b_outputs_clean/pca_loadings.csv"))
 env_vars <- loadings$variable
 
 if (file.exists(env_file)) {

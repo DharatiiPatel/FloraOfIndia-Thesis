@@ -13,8 +13,8 @@ for (pkg in required_packages) {
 }
 
 base_dir   <- "/scratch/dp23301/Thesis"
-input_file <- file.path(base_dir, "Processed Data/step05_outputs/species_color_environment_final.csv")
-output_dir  <- file.path(base_dir, "Processed Data/step06_outputs")
+input_file <- file.path(base_dir, "Processed Data/experiments/step05b_outputs_clean/species_color_environment_final_clean.csv")
+output_dir  <- file.path(base_dir, "Processed Data/step06_outputs_clean")
 fig_dir     <- file.path(output_dir, "figures")
 dir_tables  <- file.path(output_dir, "tables")
 dir_models  <- file.path(output_dir, "models")

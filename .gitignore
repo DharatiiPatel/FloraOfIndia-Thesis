@@ -4,7 +4,9 @@ logs/
 *.out
 *.err
 
-# Large data files
+# Large data files. Everything here is regenerable by rerunning the pipeline,
+# with one exception: the gold set carries manual labels that cannot be
+# reproduced from code, so it is force-added and tracked despite these rules.
 Processed Data/
 raw_data/
 *.csv
@@ -16,3 +18,9 @@ raw_data/
 step05_gbif_cache/
 step05_env_data/
 .cache/
+__pycache__/
+*.py[cod]
+
+# Local tooling (recreate with: python -m venv .venv_figs)
+.venv_figs/
+R_library/
