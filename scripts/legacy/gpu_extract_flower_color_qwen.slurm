@@ -16,4 +16,4 @@ export HF_HOME=/scratch/dp23301/.cache/huggingface
 
 cd /scratch/dp23301/Thesis
 
-python "scripts/02_Extract_flower_color_qwen_gpu.py"
+python "scripts/legacy/02_Extract_flower_color_qwen_gpu.py"

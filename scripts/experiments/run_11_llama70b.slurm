@@ -36,7 +36,7 @@ MODEL="meta-llama/Llama-3.3-70B-Instruct"
 OUTDIR="Processed Data/experiments/benchmark"
 
 # Same tasks as Qwen-72B: gold set (scoring) + full treatments (dataset / WP4)
-python scripts/experiments/extract_flower_color_multimodel.py \
+python scripts/experiments/11_Extract_Multimodel.py \
   --model "$MODEL" \
   --task "Processed Data/experiments/gold_set_labeled.csv::raw_text_snippet::species_id::${OUTDIR}/gold_pred_llama70b.csv" \
   --task "Processed Data/experiments/species_descriptions_treatments.csv::raw_text::species_id::${OUTDIR}/treatments_pred_llama70b.csv"

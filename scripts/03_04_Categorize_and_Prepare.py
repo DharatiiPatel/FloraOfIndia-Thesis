@@ -11,7 +11,7 @@ SAFE BY DESIGN:
            Processed Data/experiments/clean_species_only.csv       (input for 05a)
   Pipeline untouched.
 
-The categorize_color() logic is IDENTICAL to scripts/03_Categorize_Flower_color.py
+The categorize_color() logic is IDENTICAL to scripts/legacy/03_Categorize_Flower_color.py
 so results are comparable to the original run.
 """
 

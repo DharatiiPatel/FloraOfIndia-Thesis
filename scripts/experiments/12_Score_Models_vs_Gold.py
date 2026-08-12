@@ -4,7 +4,7 @@ Score one or more models' flower-colour predictions against the human gold set.
 
 For each model prediction file (id -> flower_color_free_text), we:
   1. categorise the predicted free text using the SAME rule as the pipeline
-     (scripts/experiments/03_04_categorize_prep_clean.py) so the comparison is fair,
+     (scripts/03_04_Categorize_and_Prepare.py) so the comparison is fair,
   2. group fine categories into the analysis classes (WHITE / YELLOW / REDTYPE /
      UNKNOWN / OTHER), matching how the gold labels are grouped,
   3. compute accuracy, per-class precision/recall/F1, macro-F1, and Cohen's kappa
@@ -16,7 +16,7 @@ Gold source: Processed Data/experiments/gold_set_template.csv
 
 Usage
 -----
-  python score_models_vs_gold.py \
+  python 12_Score_Models_vs_Gold.py \
       --pred "qwen7b=Processed Data/experiments/benchmark/gold_pred_qwen7b.csv" \
       --pred "qwen72b=Processed Data/experiments/benchmark/gold_pred_qwen72b.csv" \
       --pred "baseline=Processed Data/experiments/benchmark/gold_pred_baseline.csv"

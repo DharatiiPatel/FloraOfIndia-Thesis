@@ -20,7 +20,7 @@ Nothing in the original pipeline is touched.
 
 Usage
 -----
-  python extract_flower_color_multimodel.py \
+  python 11_Extract_Multimodel.py \
       --model Qwen/Qwen2.5-72B-Instruct \
       --task "Processed Data/experiments/gold_set_template.csv::raw_text_snippet::species_id::Processed Data/experiments/benchmark/gold_pred_qwen72b.csv" \
       --task "Processed Data/experiments/species_descriptions_treatments.csv::raw_text::species_id::Processed Data/experiments/benchmark/treatments_pred_qwen72b.csv"
@@ -39,7 +39,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 
 BASE_DIR = Path("/scratch/dp23301/Thesis")
 
-# IDENTICAL prompt to scripts/02_Extract_flower_color_qwen_gpu.py (the baseline),
+# IDENTICAL prompt to scripts/legacy/02_Extract_flower_color_qwen_gpu.py (the baseline),
 # so cross-model differences reflect the MODEL, not the prompt.
 SYSTEM_MESSAGE = (
     "You are an expert botanist. Your ONLY job is to extract the flower colour "

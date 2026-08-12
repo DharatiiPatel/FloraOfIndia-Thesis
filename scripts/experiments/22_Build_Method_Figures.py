@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import os
 import re
-import sys
 from pathlib import Path
 
 os.environ.setdefault("MPLCONFIGDIR", "/tmp/mplconfig")
@@ -36,16 +35,23 @@ EXP = BASE / "Processed Data" / "experiments"
 OUT = EXP / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 
-sys.path.insert(0, str(BASE / "scripts" / "experiments"))
-from score_models_vs_gold import CLASSES, load_gold, load_pred  # noqa: E402
-
 import importlib.util  # noqa: E402
 
-_spec = importlib.util.spec_from_file_location(
-    "c2", BASE / "scripts" / "experiments" / "categorize_v2.py"
-)
-c2 = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(c2)
+
+def _load_module(name: str, filename: str):
+    # 12_Score_Models_vs_Gold.py / 14_Categorize_v2.py have leading digits, so
+    # they cannot be imported as normal modules - load by path instead.
+    spec = importlib.util.spec_from_file_location(
+        name, BASE / "scripts" / "experiments" / filename)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+_smg = _load_module("smg", "12_Score_Models_vs_Gold.py")
+CLASSES, load_gold, load_pred = _smg.CLASSES, _smg.load_gold, _smg.load_pred
+
+c2 = _load_module("c2", "14_Categorize_v2.py")
 
 
 # --------------------------------------------------------------------------

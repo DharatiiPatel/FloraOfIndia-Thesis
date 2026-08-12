@@ -2,7 +2,7 @@
 """
 fig14 — can flower colour be predicted from environment?
 
-Follows the same design rules as build_cs_figures.py: estimates carry
+Follows the same design rules as 22_Build_Method_Figures.py: estimates carry
 uncertainty, one message per panel, PDF + 400-dpi PNG.
 
 Panel A  macro-F1 under genus-grouped CV, with bootstrap intervals.

@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# CLEAN-pipeline GBIF fetch. Faithful copy of 05a_GBIF_seed_cache.R with paths
+# GBIF fetch. Faithful copy of scripts/legacy/05a_GBIF_seed_cache.R with paths
 # redirected to experiments/. Uses a SEPARATE cache so the original is untouched.
 
 .libPaths(c("~/R/library", .libPaths()))

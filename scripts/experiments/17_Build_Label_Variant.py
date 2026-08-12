@@ -20,11 +20,11 @@ For a given model's treatment-level predictions we:
      UNKNOWN/OTHER (exactly as the real pipeline drops unknown-colour species),
   6. write a dataset with the SAME PC columns but this source's colour_group.
 
-Output feeds the MCMCglmm job array (06_MCMCglmm_array.R).
+Output feeds the MCMCglmm job array (19_MCMCglmm_Array.R).
 
 Usage
 -----
-  python wp4_build_label_variant.py \
+  python 17_Build_Label_Variant.py \
       --preds "Processed Data/experiments/benchmark/treatments_pred_baseline.csv" \
       --variant baseline
 """

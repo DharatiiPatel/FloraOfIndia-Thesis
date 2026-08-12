@@ -18,4 +18,4 @@ export HF_HOME=/scratch/dp23301/.cache/huggingface
 
 cd /scratch/dp23301/Thesis
 
-python "scripts/experiments/02_extract_flower_color_qwen_clean.py"
+python "scripts/02_Extract_Flower_Colour.py"

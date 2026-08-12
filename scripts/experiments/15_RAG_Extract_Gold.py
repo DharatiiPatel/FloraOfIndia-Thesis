@@ -18,10 +18,10 @@ Generation:
 Usage
 -----
   # CPU: build retrieval demos only (debug)
-  python rag_extract_gold.py --dump-demos 3
+  python 15_RAG_Extract_Gold.py --dump-demos 3
 
   # GPU: run RAG extraction over the gold set
-  python rag_extract_gold.py --model Qwen/Qwen2.5-7B-Instruct --top-k 3
+  python 15_RAG_Extract_Gold.py --model Qwen/Qwen2.5-7B-Instruct --top-k 3
 """
 
 from __future__ import annotations

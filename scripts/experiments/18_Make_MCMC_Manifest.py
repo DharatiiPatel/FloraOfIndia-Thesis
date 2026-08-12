@@ -6,12 +6,12 @@ Enumerates one array task per (variant x colour x chain). Running all of them as
 a SLURM array means the whole sensitivity analysis finishes in ~1 MCMC wall-clock
 instead of dozens run back-to-back.
 
-Each variant dataset is produced by wp4_build_label_variant.py and lives in
+Each variant dataset is produced by 17_Build_Label_Variant.py and lives in
 Processed Data/experiments/wp4_label_variants/species_color_environment_<variant>.csv
 
 Usage
 -----
-  python wp4_make_manifest.py --variant baseline --variant qwen7b [--variant qwen72b ...]
+  python 18_Make_MCMC_Manifest.py --variant baseline --variant qwen7b [--variant qwen72b ...]
 """
 
 import argparse
@@ -39,7 +39,7 @@ def main():
         if not ds.exists():
             raise FileNotFoundError(
                 f"variant dataset missing: {ds}\n"
-                f"run wp4_build_label_variant.py --variant {variant} first")
+                f"run 17_Build_Label_Variant.py --variant {variant} first")
         for color_label, response_col in COLORS:
             for chain, seed in CHAIN_SEEDS.items():
                 rows.append(dict(
@@ -55,7 +55,7 @@ def main():
 
     print(f"Wrote manifest with {len(rows)} tasks -> {MANIFEST}")
     print(f"Submit with:  sbatch --array=0-{len(rows)-1} "
-          f"scripts/experiments/run_06_array.slurm")
+          f"scripts/experiments/run_19_array.slurm")
 
 
 if __name__ == "__main__":

@@ -20,6 +20,6 @@ cd /scratch/dp23301/Thesis
 
 # Re-run the 7B model on ALL 98 gold descriptions (not just the 70 that survived
 # the clean parser) so every model is scored on the same rows.
-python scripts/experiments/extract_flower_color_multimodel.py \
+python scripts/experiments/11_Extract_Multimodel.py \
   --model "Qwen/Qwen2.5-7B-Instruct" \
   --task "Processed Data/experiments/gold_set_labeled.csv::raw_text_snippet::species_id::Processed Data/experiments/benchmark/gold_pred_qwen7b_full.csv"

@@ -10,8 +10,8 @@
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=dp23301@uga.edu
 
-# Submit with an explicit array range printed by wp4_make_manifest.py, e.g.:
-#   sbatch --array=0-17 scripts/experiments/run_06_array.slurm
+# Submit with an explicit array range printed by 18_Make_MCMC_Manifest.py, e.g.:
+#   sbatch --array=0-17 scripts/experiments/run_19_array.slurm
 # Each task runs ONE (variant x colour x chain) MCMCglmm in parallel.
 
 module purge
@@ -19,4 +19,4 @@ unset PYTHONPATH
 module load R/4.5.1-gfbf-2025a
 
 cd /scratch/dp23301/Thesis
-Rscript scripts/experiments/06_MCMCglmm_array.R
+Rscript scripts/experiments/19_MCMCglmm_Array.R

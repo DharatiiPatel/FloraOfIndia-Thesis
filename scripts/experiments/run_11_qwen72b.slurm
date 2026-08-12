@@ -28,7 +28,7 @@ OUTDIR="Processed Data/experiments/benchmark"
 
 # Task 1: gold-set (100 human-labelled descriptions) -> for scoring
 # Task 2: full treatments (3,857 species) -> the dataset for this model
-python scripts/experiments/extract_flower_color_multimodel.py \
+python scripts/experiments/11_Extract_Multimodel.py \
   --model "$MODEL" \
   --task "Processed Data/experiments/gold_set_labeled.csv::raw_text_snippet::species_id::${OUTDIR}/gold_pred_qwen72b.csv" \
   --task "Processed Data/experiments/species_descriptions_treatments.csv::raw_text::species_id::${OUTDIR}/treatments_pred_qwen72b.csv"

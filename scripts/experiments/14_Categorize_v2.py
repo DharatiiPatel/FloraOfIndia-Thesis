@@ -15,7 +15,7 @@ primary colour (botanical descriptions usually lead with the dominant
 pigment), with an expanded synonym list (scarlet/crimson/etc.).
 
 Usage (re-score existing free-text predictions, no GPU needed):
-  python categorize_v2.py --rescore
+  python 14_Categorize_v2.py --rescore
 """
 
 from __future__ import annotations

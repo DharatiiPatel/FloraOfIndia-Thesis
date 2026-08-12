@@ -4,10 +4,15 @@ MS Computer Science thesis (Dharati Patel, UGA): open-source LLM extraction of f
 colour from *Flora of India*, benchmarked against a human gold set, and linked to
 GBIF / WorldClim / SoilGrids ecology via Bayesian mixed models.
 
-The project has two halves:
-
-- **Phase A — pipeline + ecology.** Scrape → parse → extract colour → GBIF → environment → MCMCglmm. Scripts `01`–`08` at the top of `scripts/`.
-- **Phase B — method depth (RQ1–RQ4).** Gold-set benchmark, error taxonomy, categoriser v2 + RAG + abstention, and downstream label-sensitivity. Lives entirely under `scripts/experiments/` and `Processed Data/experiments/` so Phase A stays reproducible.
+It is one pipeline, not two parallel tracks: `scripts/01a`–`08` scrape, parse,
+extract colour, fetch GBIF/environment data, and fit the Bayesian models;
+`scripts/experiments/09`–`23` are the method-depth work built on top of that
+same pipeline — a gold-set benchmark (RQ1), an error taxonomy (RQ2),
+interventions: categoriser v2 + RAG + abstention (RQ3), a label-sensitivity
+check across four independent label sources (RQ4), and a prediction task
+testing whether colour is predictable from environment at all. Superseded
+script versions live in `scripts/legacy/` and `scripts/experiments/exploratory/`
+for provenance, not because two pipelines coexist.
 
 ---
 
@@ -32,35 +37,55 @@ Thesis/
 │   └── drafts/Chapter3_Data_and_Pipeline_Draft.md
 │
 ├── scripts/
-│   ├── 01a–08                    Phase A pipeline (Python + R)
-│   ├── run_*.sh                  Phase A job wrappers
-│   ├── experiments/              Phase B (RQ1–RQ4)
-│   │   ├── parse_treatments.py           clean treatment parser
-│   │   ├── make_gold_set.py              stratified gold sample
-│   │   ├── baseline_rule_extractor.py    rule floor for RQ1
-│   │   ├── extract_flower_color_multimodel.py   Qwen-7B/72B, Llama-70B
-│   │   ├── score_models_vs_gold.py       RQ1 metrics
-│   │   ├── rq2_error_taxonomy.py         RQ2 failure classes
-│   │   ├── categorize_v2.py              RQ3 categoriser v2
-│   │   ├── rag_extract_gold.py           RQ3 RAG + abstention
-│   │   ├── score_rq3_interventions.py    RQ3 scoring
-│   │   ├── wp4_*.{py,R}                  RQ4 label variants + MCMC
-│   │   ├── build_cs_figures.py           fig7–fig13 (RQ1–RQ4)
-│   │   ├── predict_colour_from_env.py    prediction task
-│   │   ├── build_prediction_figure.py    fig14
+│   ├── 01a_Scraping_FloraOfIndia.py       scrape BSI PDF links
+│   ├── 01b_Extract_text_from_pdfs.py      OCR / text extraction
+│   ├── 01c_Parse_Treatments.py            treatment-boundary parser
+│   ├── 02_Extract_Flower_Colour.py        Qwen2.5-7B colour extraction (GPU)
+│   ├── 03_04_Categorize_and_Prepare.py    categorise + prep (absorbs old 03+04)
+│   ├── 05a_GBIF_Occurrences.R             GBIF occurrence fetch
+│   ├── 05b_Environment_Link.R             WorldClim/SoilGrids + PCA
+│   ├── 06_MCMCglmm.R / 06b_*.R            Bayesian mixed models
+│   ├── 07_Generate_Figures.R              fig1–fig6 + Results/ symlinks
+│   ├── 08_ElevationGradient_Analysis.R    elevation gradient extension
+│   ├── run_*.sh / run_*.slurm             SLURM wrappers for the above
+│   ├── experiments/               method-depth work (RQ1–RQ4 + prediction)
+│   │   ├── 09_Make_Gold_Set.py                   stratified gold sample
+│   │   ├── 09b_Flag_Gold_Set_Junk.py             pre-flag malformed rows
+│   │   ├── 10_Baseline_Rule_Extractor.py         rule floor for RQ1
+│   │   ├── 11_Extract_Multimodel.py              Qwen-7B/72B, Llama-70B
+│   │   ├── 12_Score_Models_vs_Gold.py            RQ1 metrics
+│   │   ├── 13_Error_Taxonomy.py                  RQ2 failure classes
+│   │   ├── 14_Categorize_v2.py                   RQ3 categoriser v2
+│   │   ├── 15_RAG_Extract_Gold.py                RQ3 RAG + abstention
+│   │   ├── 16_Score_Interventions.py             RQ3 scoring
+│   │   ├── 17_Build_Label_Variant.py             RQ4 per-label-source datasets
+│   │   ├── 18_Make_MCMC_Manifest.py              RQ4 job-array manifest
+│   │   ├── 19_MCMCglmm_Array.R                   RQ4 MCMC (4 variants x 3 colours x 3 chains)
+│   │   ├── 20_Combine_Label_Results.R            RQ4 combine + concordance
+│   │   ├── 21_Predict_Colour_from_Env.py         prediction task (genus-grouped CV)
+│   │   ├── 22_Build_Method_Figures.py            fig7–fig13
+│   │   ├── 23_Build_Prediction_Figure.py         fig14
+│   │   ├── exploratory/                  evaluated, not adopted (kept for provenance)
+│   │   │   ├── reocr_pdf.py / compare_ocr_quality.py    re-OCR pilot
+│   │   │   └── fix_abbreviated_genus.py / measure_genus_fix_payoff.py
 │   │   └── *.slurm                       cluster jobs
-│   └── legacy/                   superseded, kept for provenance
+│   └── legacy/                    superseded pipeline scripts, kept for provenance
 │
 ├── Processed Data/               pipeline outputs (gitignored, 3.6 GB)
-│   ├── figures/                  canonical Phase A figures
-│   ├── step04–step08_outputs/    Phase A stage outputs
-│   ├── step05_env_data/          WorldClim / SoilGrids rasters
-│   └── experiments/              Phase B outputs
-│       ├── gold_set_labeled.csv          98 labelled items
+│   ├── figures/                  canonical fig1–fig6 output (07_Generate_Figures.R)
+│   ├── step06_outputs_clean/     MCMCglmm models + tables
+│   ├── step08_outputs_clean/     elevation gradient outputs
+│   ├── step0*_outputs/           superseded pre-clean stage outputs (see legacy/)
+│   └── experiments/
+│       ├── species_descriptions_treatments.csv   3,857 unique treatments (01c)
+│       ├── clean_species_only.csv                species-level colour labels (03_04)
+│       ├── step05b_outputs_clean/        env-linked data + PCA (05b)
+│       ├── gold_set_labeled.csv          98 labelled items (09)
 │       ├── benchmark/                    RQ1 predictions + summary
 │       ├── rq2_outputs/                  RQ2 taxonomy
 │       ├── rq3_outputs/                  RQ3 RAG + intervention scores
 │       ├── wp4_label_variants/results/   RQ4 fixed effects
+│       ├── prediction_outputs/           prediction task results
 │       └── figures/                      canonical fig7–fig14 output
 │
 ├── raw_data/pdfs/                Flora of India source PDFs
@@ -97,14 +122,18 @@ number is in `docs/VERIFIED_Numbers_for_Thesis.md`.
 ## Regenerating outputs
 
 ```bash
-# Phase A ecology figures
+# Ecology figures (fig1-fig6) + Results/ symlinks
 module load R/4.5.1-gfbf-2025a
 Rscript scripts/07_Generate_Figures.R
 
-# Phase B CS/method figures (needs the local venv)
-python -m venv .venv_figs && .venv_figs/bin/pip install matplotlib numpy pandas
-.venv_figs/bin/python scripts/experiments/build_cs_figures.py
+# Method-depth figures fig7-fig13 (needs the local venv)
+python -m venv .venv_figs && .venv_figs/bin/pip install matplotlib numpy pandas scikit-learn
+.venv_figs/bin/python scripts/experiments/22_Build_Method_Figures.py
+
+# Prediction task + its figure (fig14)
+.venv_figs/bin/python scripts/experiments/21_Predict_Colour_from_Env.py
+.venv_figs/bin/python scripts/experiments/23_Build_Prediction_Figure.py
 ```
 
-GPU extraction and MCMC runs are submitted with `sbatch` from `scripts/experiments/*.slurm`.
-Login nodes are for submission only.
+GPU extraction and MCMC runs are submitted with `sbatch` from `scripts/*.slurm` and
+`scripts/experiments/*.slurm`. Login nodes are for submission only.

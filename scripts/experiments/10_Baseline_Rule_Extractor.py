@@ -18,11 +18,11 @@ This deliberately does NOT try to resolve fruit/leaf colour, multi-colour, etc.
 -- that is exactly the gap the LLMs are supposed to close.
 
 Runs on CPU. Output format matches the LLM extractor (id, flower_color_free_text)
-so score_models_vs_gold.py can treat it as just another 'model'.
+so 12_Score_Models_vs_Gold.py can treat it as just another 'model'.
 
 Usage
 -----
-  python baseline_rule_extractor.py \
+  python 10_Baseline_Rule_Extractor.py \
       --task "Processed Data/experiments/gold_set_template.csv::raw_text_snippet::species_id::Processed Data/experiments/benchmark/gold_pred_baseline.csv" \
       --task "Processed Data/experiments/species_descriptions_treatments.csv::raw_text::species_id::Processed Data/experiments/benchmark/treatments_pred_baseline.csv"
 """

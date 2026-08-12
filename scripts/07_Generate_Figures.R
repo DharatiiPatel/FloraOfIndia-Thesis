@@ -412,7 +412,7 @@ if (length(gr_files) > 0) {
 }
 
 # No standalone summary_color_category.csv exists in the clean pipeline
-# (03_04_categorize_prep_clean.py only prints the counts) - derive it here
+# (03_04_Categorize_and_Prepare.py only prints the counts) - derive it here
 # from df_species instead of depending on a file that was never regenerated.
 # This path used to be a symlink into the old step04_outputs/ - if left in
 # place, write.csv() would follow it and silently overwrite that legacy file.

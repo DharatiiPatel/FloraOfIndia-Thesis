@@ -2,7 +2,7 @@
 """
 Compare OLD vs NEW OCR text quality for the SAME volume.
 
-Applies the same species-heading regex used by 01c_Parsing_to_species.py and
+Applies the same species-heading regex used by scripts/legacy/01c_Parsing_to_species.py and
 reports objective quality metrics so you can decide if re-OCR is worth it.
 
 Usage:
