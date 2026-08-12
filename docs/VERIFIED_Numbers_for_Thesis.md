@@ -140,8 +140,21 @@ Excluding the 9 rows flagged `JUNK_NON_SPECIES`:
 | llama70b | 0.8571 | 0.9184 | 0.8989 | 0.9438 |
 | qwen7b RAG | 0.8980 | 0.9490 | 0.8989 | 0.9438 |
 
-Two consequences: **RAG = zero-shot on species-only rows** (its gain is abstention on malformed input),
+Two consequences: **RAG ties zero-shot on species-only rows** (both 84/89 = 0.9438 under v2),
 and **all three LLMs tie at 0.8989** under v1 once junk is removed.
+
+**Scoring rule (required to reproduce the RAG figures):** RAG may output `uncertain`;
+those are scored as **UNKNOWN**, per `15_RAG_Extract_Gold.py`. Neither categoriser has a
+rule for `uncertain`, so without this mapping it falls through to OTHER and RAG scores
+0.8539/0.8989 instead. Verified by `25_Lock_Baselines.py`.
+
+**Do not write** "RAG's only gain is abstention on malformed input" — that is wrong.
+Of RAG's 5 abstentions, **4 are on genuine species rows and 1 on a junk row**; all 4
+genuine ones have gold = UNKNOWN, i.e. RAG correctly declines to invent a colour when the
+treatment states none. The tie is also **not** prediction-identity: zero-shot and RAG
+differ on 4 of the 89 rows (2 RAG fixes, 2 RAG breaks) which exactly offset, so McNemar
+gives no evidence either way. Correct claim: *RAG matches zero-shot accuracy on genuine
+species text while abstaining on rows that carry no colour information.*
 
 ---
 
