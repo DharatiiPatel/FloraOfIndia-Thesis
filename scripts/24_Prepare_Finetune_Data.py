@@ -51,6 +51,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import importlib.util
 import json
 import sys
 from collections import Counter, defaultdict
@@ -77,6 +78,16 @@ SYSTEM_MESSAGE = (
 # The gold snippets run to ~10k characters; the extractor only ever needed the
 # opening morphological text, and long inputs blow up LoRA step time for no gain.
 MAX_DESC_CHARS = 3000
+
+# 19 of the 20 UNKNOWN rows carry gold_free_text 'unknown' (one says 'flower
+# colour not mentioned.'). Both are human shorthand for the notes column, not
+# generation targets: neither categoriser has a rule for them, so both score as
+# OTHER, and they contradict the system prompt sitting in the same training
+# example. Training on them teaches the model a string it can never be scored
+# correct for - the pilot duly produced invented colours on UNKNOWN rows.
+# Targets for UNKNOWN rows are therefore normalised to the phrase the prompt
+# demands and the scorer recognises.
+CANONICAL_UNKNOWN = "no flower colour mentioned"
 
 
 def user_message(description: str) -> str:
@@ -135,16 +146,42 @@ def stratified_folds(rows, n_folds: int, seed: int) -> dict[str, int]:
 
 def to_record(row: dict) -> dict:
     desc = (row["raw_text_snippet"] or "").strip()[:MAX_DESC_CHARS]
+    category = row["gold_category"].strip()
+    free_text = row["gold_free_text"].strip()
+    target = CANONICAL_UNKNOWN if category.upper() == "UNKNOWN" else free_text
     return {
         "species_id": row["species_id"],
-        "gold_category": row["gold_category"].strip(),
-        "gold_free_text": row["gold_free_text"].strip(),
+        "gold_category": category,
+        "gold_free_text": free_text,
+        "target": target,
+        "target_normalised": target != free_text,
         "messages": [
             {"role": "system", "content": SYSTEM_MESSAGE},
             {"role": "user", "content": user_message(desc)},
-            {"role": "assistant", "content": row["gold_free_text"].strip()},
+            {"role": "assistant", "content": target},
         ],
     }
+
+
+def audit_targets(rows) -> list[tuple[str, str, str, str]]:
+    """Find targets the scorer will not map back to their own gold class."""
+    spec = importlib.util.spec_from_file_location(
+        "c2", BASE / "scripts" / "14_Categorize_v2.py")
+    c2 = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(c2)
+    spec2 = importlib.util.spec_from_file_location(
+        "smg", BASE / "scripts" / "12_Score_Models_vs_Gold.py")
+    smg = importlib.util.module_from_spec(spec2)
+    spec2.loader.exec_module(smg)
+
+    problems = []
+    for row in rows:
+        rec = to_record(row)
+        gold_cls = smg.to_class(rec["gold_category"])
+        got = smg.to_class(c2.categorize_v2(rec["target"]))
+        if got != gold_cls:
+            problems.append((rec["species_id"], gold_cls, got, rec["target"]))
+    return problems
 
 
 def write_jsonl(path: Path, records) -> int:
@@ -193,6 +230,20 @@ def main():
 
     n_junk = write_jsonl(OUTDIR / "eval_junk.jsonl", [to_record(r) for r in junk_rows])
 
+    # A target the scorer cannot map back to its own gold class can never be
+    # rewarded, however well the model reproduces it. Report these instead of
+    # letting them quietly cap the achievable accuracy.
+    unscoreable = audit_targets(genuine)
+    n_normalised = sum(1 for r in genuine if to_record(r)["target_normalised"])
+    print(f"\nUNKNOWN targets normalised to {CANONICAL_UNKNOWN!r}: {n_normalised}")
+    if unscoreable:
+        print(f"Targets that still cannot score as their own gold class: "
+              f"{len(unscoreable)}/{len(genuine)}")
+        for sid, gold_cls, got, txt in unscoreable:
+            print(f"   gold={gold_cls:8s} scores as {got:8s} | {txt[:52]!r}")
+        print("   (human-vs-rule disagreements on ambiguous multi-colour text; "
+              "an inherent ceiling, not a bug)")
+
     (OUTDIR / "folds.json").write_text(
         json.dumps(folds, indent=2, ensure_ascii=False), encoding="utf-8"
     )
@@ -207,6 +258,13 @@ def main():
         "seed": args.seed,
         "stratify_by": "gold_category",
         "target_field": "gold_free_text",
+        "unknown_target_normalised_to": CANONICAL_UNKNOWN,
+        "n_targets_normalised": n_normalised,
+        "n_targets_unscoreable": len(unscoreable),
+        "unscoreable_targets": [
+            {"species_id": s, "gold_class": g, "scores_as": p, "target": t}
+            for s, g, p, t in unscoreable
+        ],
         "max_desc_chars": MAX_DESC_CHARS,
         "class_distribution": dict(sorted(dist.items())),
         "classes_too_small_for_all_folds": sorted(
