@@ -18,7 +18,7 @@ export HF_HOME=/scratch/dp23301/.cache/huggingface
 
 cd /scratch/dp23301/Thesis
 
-python scripts/experiments/15_RAG_Extract_Gold.py \
+python scripts/15_RAG_Extract_Gold.py \
   --model "Qwen/Qwen2.5-7B-Instruct" \
   --top-k 3 \
   --out "Processed Data/experiments/rq3_outputs/gold_pred_qwen7b_rag.csv"

@@ -55,7 +55,7 @@ def main():
 
     print(f"Wrote manifest with {len(rows)} tasks -> {MANIFEST}")
     print(f"Submit with:  sbatch --array=0-{len(rows)-1} "
-          f"scripts/experiments/run_19_array.slurm")
+          f"scripts/run_19_array.slurm")
 
 
 if __name__ == "__main__":

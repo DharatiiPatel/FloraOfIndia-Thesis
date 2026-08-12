@@ -237,7 +237,7 @@ Effects significant under **both** the baseline and an LLM source agree to withi
 
 ### CS / method chapters — **generated**
 
-Built by `scripts/experiments/22_Build_Method_Figures.py` (fig7–fig13) and
+Built by `scripts/22_Build_Method_Figures.py` (fig7–fig13) and
 `23_Build_Prediction_Figure.py` (fig14); 400-dpi PNG + vector PDF, living
 alongside the ecology figures in `Results/figures/main/` — one flat,
 continuously numbered sequence rather than a separate folder.

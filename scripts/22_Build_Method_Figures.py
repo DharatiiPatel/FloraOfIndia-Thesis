@@ -42,7 +42,7 @@ def _load_module(name: str, filename: str):
     # 12_Score_Models_vs_Gold.py / 14_Categorize_v2.py have leading digits, so
     # they cannot be imported as normal modules - load by path instead.
     spec = importlib.util.spec_from_file_location(
-        name, BASE / "scripts" / "experiments" / filename)
+        name, BASE / "scripts" / filename)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod

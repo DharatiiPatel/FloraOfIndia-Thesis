@@ -11,7 +11,7 @@ GOLD = EXP / "gold_set_labeled.csv"
 OUT = EXP / "rq3_outputs" / "rq3_intervention_scores.csv"
 
 spec = importlib.util.spec_from_file_location(
-    "c2", BASE / "scripts/experiments/14_Categorize_v2.py")
+    "c2", BASE / "scripts/14_Categorize_v2.py")
 c2 = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(c2)
 

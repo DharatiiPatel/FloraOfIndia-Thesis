@@ -213,10 +213,10 @@ Python stages rely on `transformers`/`torch` for model inference and the Python
 standard library for parsing and categorisation. R stages use `rgbif`, `terra`,
 `geodata`, `dplyr`, `MCMCglmm`, and `coda`.
 
-Experiment-facing scripts and outputs are isolated under `scripts/experiments/` and
-`Processed Data/experiments/`, leaving the original pipeline artefacts intact as a
-stable reference. Checkpointed GBIF caches and Hugging Face model caches on scratch
-storage enable resumable long-running jobs.
+Method-depth scripts (numbered 09+) live alongside the main pipeline in `scripts/`
+and write to `Processed Data/experiments/`, leaving the original pipeline artefacts
+intact as a stable reference. Checkpointed GBIF caches and Hugging Face model
+caches on scratch storage enable resumable long-running jobs.
 
 ---
 

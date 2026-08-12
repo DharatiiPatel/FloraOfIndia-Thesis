@@ -124,5 +124,6 @@ semantic ambiguity — it is one category among several, not the headline).
 5. **WP5** cost frontier — free data from the runs.
 6. **WP6** optional extensions.
 
-*Everything is built in `scripts/experiments/` and writes to
-`Processed Data/experiments/` — the original pipeline is never touched.*
+*Everything is built in `scripts/` (numbered 09+, alongside the main pipeline)
+and writes to `Processed Data/experiments/` — the original pipeline outputs
+are never touched.*

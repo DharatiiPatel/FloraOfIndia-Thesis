@@ -23,7 +23,7 @@ PDF="raw_data/pdfs/FLORA OF INDIA VOL.1.pdf"
 OUT="Processed Data/experiments/reocr_text/VOL.1.txt"
 
 # For a FAST pilot, do the first 40 pages only (remove --max-pages for full volume).
-python scripts/experiments/exploratory/reocr_pdf.py \
+python scripts/legacy/exploratory/reocr_pdf.py \
     --pdf "$PDF" \
     --out "$OUT" \
     --dpi 400 --psm 6 --oem 1 \
