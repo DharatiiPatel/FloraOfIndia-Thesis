@@ -12,4 +12,4 @@ Symlinks to `Processed Data/` outputs. Synced by `scripts/07_Generate_Figures.R`
 - **elevation/** — Elevation analysis tables
 - **descriptive/** — Colour counts, PCA loadings
 
-Last synced: 2026-05-31 19:41:53.853684
+Last synced: 2026-08-12 12:47:07.757723

@@ -21,9 +21,17 @@ base_dir   <- "/scratch/dp23301/Thesis"
 # Publication styling for the bar charts (fig1, fig4, fig5) lives here so that
 # scripts/rebuild_bar_figures.R and this script cannot drift apart.
 source(file.path(base_dir, "scripts/figure_style.R"))
-step04_dir <- file.path(base_dir, "Processed Data/step04_outputs")
-step05_dir <- file.path(base_dir, "Processed Data/step05_outputs")
-step06_dir   <- file.path(base_dir, "Processed Data/step06_outputs")
+
+# Clean pipeline outputs (see docs/VERIFIED_Numbers_for_Thesis.md). There is
+# only one pipeline now; these paths are not an "updated" alternative to
+# anything else in Processed Data/.
+exp_dir       <- file.path(base_dir, "Processed Data/experiments")
+species_only  <- file.path(exp_dir, "clean_species_only.csv")
+treatments_f  <- file.path(exp_dir, "species_descriptions_treatments.csv")
+gbif_cache_dir <- file.path(exp_dir, "gbif_cache_clean")
+step05_dir    <- file.path(exp_dir, "step05b_outputs_clean")
+env_final_f   <- file.path(step05_dir, "species_color_environment_final_clean.csv")
+step06_dir   <- file.path(base_dir, "Processed Data/step06_outputs_clean")
 step06_tables <- file.path(step06_dir, "tables")
 step06_models <- file.path(step06_dir, "models")
 fig_dir      <- file.path(base_dir, "Processed Data/figures")
@@ -97,7 +105,7 @@ var_colors <- c(
 
 message("Loading data...")
 
-df_species <- read.csv(file.path(step04_dir, "flora_india_color_clean_species_only.csv"))
+df_species <- read.csv(species_only)
 effects    <- read.csv(s06_combined)
 names(effects) <- c("mean", "lower", "upper", "eff_samp", "pMCMC", "variable", "color")
 loadings   <- read.csv(file.path(step05_dir, "pca_loadings.csv"))
@@ -261,11 +269,11 @@ save_fig(file.path(fig_dir, "fig4_convergence.png"), p4, 10.5, 4.0, dpi = 300)
 
 message("Figure 5: Pipeline summary...")
 
-n_parsed   <- nrow(read.csv(file.path(base_dir, "Processed Data/flora_of_india_species_descriptions.csv")))
+n_parsed   <- nrow(read.csv(treatments_f))
 n_species  <- nrow(df_species)
 n_known    <- sum(!df_species$color_category %in% c("UNKNOWN", "OTHER", "GREENISH"))
-n_gbif     <- length(list.files(file.path(base_dir, "Processed Data/step05_gbif_cache"), pattern = "\\.csv$"))
-n_analysis <- nrow(read.csv(file.path(step05_dir, "species_color_environment_final.csv")))
+n_gbif     <- length(list.files(gbif_cache_dir, pattern = "\\.csv$"))
+n_analysis <- nrow(read.csv(env_final_f))
 
 pipe_df <- tibble(
   stage = c("Parsed text blocks", "Species-level records", "Known flower colour",
@@ -334,7 +342,7 @@ message("\nFigures saved to: ", fig_dir)
 message("Publishing Results/ ...")
 res      <- file.path(base_dir, "Results")
 proc     <- file.path(base_dir, "Processed Data")
-step08   <- file.path(proc, "step08_outputs")
+step08   <- file.path(proc, "step08_outputs_clean")
 
 for (d in c("figures/main", "figures/supplementary", "figures/elevation",
             "tables/mcmc", "tables/elevation", "tables/descriptive")) {
@@ -403,8 +411,18 @@ if (length(gr_files) > 0) {
   write.csv(conv, file.path(res, "tables/mcmc/convergence_summary.csv"), row.names = FALSE)
 }
 
-link_to(file.path(proc, "step04_outputs/summary_color_category.csv"),
-        file.path(res, "tables/descriptive/color_category_summary.csv"))
+# No standalone summary_color_category.csv exists in the clean pipeline
+# (03_04_categorize_prep_clean.py only prints the counts) - derive it here
+# from df_species instead of depending on a file that was never regenerated.
+# This path used to be a symlink into the old step04_outputs/ - if left in
+# place, write.csv() would follow it and silently overwrite that legacy file.
+color_summary_dst <- file.path(res, "tables/descriptive/color_category_summary.csv")
+if (file.exists(color_summary_dst) && !identical(Sys.readlink(color_summary_dst), "")) {
+  unlink(color_summary_dst)
+}
+color_summary <- df_species %>% count(color_category, name = "n")
+write.csv(color_summary, color_summary_dst, row.names = FALSE)
+
 link_to(file.path(step05_dir, "pca_loadings.csv"),
         file.path(res, "tables/descriptive/pca_loadings.csv"))
 
