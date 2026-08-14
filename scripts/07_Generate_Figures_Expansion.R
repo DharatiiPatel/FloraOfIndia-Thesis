@@ -1,9 +1,9 @@
 #!/usr/bin/env Rscript
-# Full ecology figure set from the expansion analysis (n=1438).
-# Writes under Processed Data/experiments/expansion/figures/ and publishes
-# symlinks into Results/figures/ so the thesis figure set tracks expansion.
-# Primary n=1174 paths under Processed Data/figures/ and step06_outputs_clean/
-# are left untouched (back up Results before first publish).
+# Full ecology figure set for the primary analysis set (n=1,438).
+# Writes under Processed Data/experiments/expansion/figures/ (internal path;
+# that directory is the primary analysis output) and publishes symlinks into
+# Results/figures/. Prior n=1,174 artefacts under Processed Data/figures/ and
+# step06_outputs_clean/ are left untouched (backup: Results/figures/main_n1174_backup/).
 
 .libPaths(c("/scratch/dp23301/Thesis/R_library", "~/R/library", .libPaths()))
 options(stringsAsFactors = FALSE)
@@ -79,11 +79,11 @@ var_colors <- c(
   "Others" = "#666666"
 )
 
-message("Loading expansion data...")
+message("Loading primary analysis data (n=1,438 set)...")
 
 df_analysis <- read.csv(env_final_f, check.names = FALSE)
 n_analysis  <- nrow(df_analysis)
-n_subtitle  <- sprintf("Expanded analysis set, n = %s", format(n_analysis, big.mark = ","))
+n_subtitle  <- sprintf("Analysis set, n = %s", format(n_analysis, big.mark = ","))
 message("Analysis N = ", n_analysis)
 
 effects <- read.csv(s06_combined, check.names = FALSE)
@@ -156,7 +156,7 @@ color_counts <- df_analysis %>%
   count(color_category, name = "n")
 
 p1 <- plot_colour_counts(color_counts) +
-  labs(title = "Flower colour distribution — expanded analysis set",
+  labs(title = "Flower colour distribution — analysis set",
        caption = n_subtitle)
 save_fig(file.path(fig_dir, "fig1_colour_counts.png"), p1, 8.0, 4.4, dpi = 300)
 
@@ -243,7 +243,7 @@ if (has_sv) {
 
   save_fig(file.path(fig_dir, "fig2b_mcmc_env_variables.png"), p2b, 10, 14)
 } else {
-  message("  fig2b skipped — single_variable_models.csv not found for expansion.")
+  message("  fig2b skipped — single_variable_models.csv not found for primary set.")
 }
 
 # ── Figure 4: convergence ────────────────────────────────────────────────────
@@ -264,7 +264,7 @@ n_parsed_primary <- if (file.exists(treatments_f)) nrow(read.csv(treatments_f)) 
 n_parsed_new     <- if (file.exists(new_desc_f)) nrow(read.csv(new_desc_f)) else 0L
 n_parsed         <- sum(n_parsed_primary, n_parsed_new, na.rm = TRUE)
 
-# Species-level colour records: primary clean + new expansion extracts
+# Species-level colour records: earlier clean extracts + recovered/fascicle additions
 df_clean <- if (file.exists(clean_sp_f)) read.csv(clean_sp_f) else data.frame()
 df_new   <- if (file.exists(new_col_f)) read.csv(new_col_f) else data.frame()
 n_species <- length(unique(c(
@@ -290,14 +290,14 @@ pipe_df <- tibble(
 )
 
 p5 <- plot_pipeline(pipe_df) +
-  labs(title = "Species retention through the expansion pipeline",
+  labs(title = "Species retention through the analysis pipeline",
        caption = n_subtitle)
 save_fig(file.path(fig_dir, "fig5_pipeline_summary.png"), p5, 8.6, 4.4, dpi = 300)
 
-# Compact coefficient plot (legacy expansion artefact name)
+# Compact coefficient plot (artefact name kept for path stability)
 p_exp <- make_forest_plot(
   eff_pc, paste0("PC", 1:10),
-  "Expanded MCMCglmm fixed effects (PC1–PC10)",
+  "MCMCglmm fixed effects (PC1–PC10)",
   subtitle = n_subtitle
 )
 save_fig(file.path(fig_dir, "coefficient_plot_expanded.png"), p_exp, 10, 8)
@@ -367,7 +367,7 @@ for (i in seq_len(nrow(conv_rows))) {
 }
 
 # ── Publish to Results/ ──────────────────────────────────────────────────────
-message("Publishing Results/ from expansion outputs...")
+message("Publishing Results/ from primary analysis outputs...")
 res  <- file.path(base_dir, "Results")
 proc <- file.path(base_dir, "Processed Data")
 
@@ -393,14 +393,14 @@ main_figs <- c(
 for (f in main_figs) {
   link_to(file.path(fig_dir, f), file.path(res, "figures/main", f))
 }
-# fig2b only if regenerated for expansion; otherwise drop stale n1174 symlink
+# fig2b only if regenerated for primary set; otherwise drop stale n1174 symlink
 fig2b_src <- file.path(fig_dir, "fig2b_mcmc_env_variables.png")
 fig2b_dst <- file.path(res, "figures/main", "fig2b_mcmc_env_variables.png")
 if (file.exists(fig2b_src)) {
   link_to(fig2b_src, fig2b_dst)
-} else if (file.exists(fig2b_dst) || file.lexists(fig2b_dst)) {
+} else if (file.exists(fig2b_dst) || (!is.na(Sys.readlink(fig2b_dst)) && nzchar(Sys.readlink(fig2b_dst)))) {
   unlink(fig2b_dst)
-  message("  Removed stale Results fig2b (no expansion single-variable models).")
+  message("  Removed stale Results fig2b (no primary-set single-variable models).")
 }
 
 link_to(file.path(fig_dir, "figS_traceplots.png"),
@@ -464,22 +464,24 @@ if (dir.exists(step08_dir)) {
 
 writeLines(c(
   "# Thesis Results", "",
-  "Published figure/table set tracks the **expansion** ecology analysis (n=1,438).",
+  "Published figure/table set tracks the **primary** ecology analysis (n=1,438).",
   "Synced by `scripts/07_Generate_Figures_Expansion.R`.", "",
-  "Primary n=1,174 artefacts remain under `Processed Data/figures/` /",
+  "Internal outputs live under `Processed Data/experiments/expansion/` (path name",
+  "kept for script compatibility; treat as primary analysis output).",
+  "Prior n=1,174 artefacts remain under `Processed Data/figures/` /",
   "`step06_outputs_clean/` / `step08_outputs_clean/`. Backup of the previous",
   "Results ecology set: `Results/figures/main_n1174_backup/`.", "",
   "## figures/",
-  "- **main/** — fig1–fig5 from expansion; fig7–fig14 method/prediction unchanged",
+  "- **main/** — fig1–fig5 from primary set; fig7–fig14 method/prediction unchanged",
   "- **supplementary/** — traces + PC1–PC3 coefficient diagnostic",
-  "- **elevation/** — Step 08 expansion fig6_* (when step08 expansion has run)", "",
+  "- **elevation/** — Step 08 fig6_* (when step08 has run)", "",
   "## tables/",
-  "- **mcmc/** — expansion MCMCglmm outputs",
-  "- **elevation/** — expansion elevation tables (when available)",
+  "- **mcmc/** — primary MCMCglmm outputs",
+  "- **elevation/** — primary elevation tables (when available)",
   "- **descriptive/** — colour counts, PCA loadings", "",
   paste("Last synced:", Sys.time()),
   paste("Analysis N:", n_analysis)
 ), file.path(res, "README.md"))
 
 message("Results published to: ", res)
-message("Expansion Step 07 complete (N=", n_analysis, ").")
+message("Primary figure publish complete (N=", n_analysis, ").")

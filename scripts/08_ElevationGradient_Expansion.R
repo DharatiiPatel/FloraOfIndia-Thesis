@@ -1,7 +1,8 @@
 #!/usr/bin/env Rscript
-# Elevation-gradient analysis on the expansion set (n=1438).
-# Writes under Processed Data/experiments/expansion/step08_outputs/.
-# Does not touch primary step08_outputs_clean/.
+# Elevation-gradient analysis on the primary analysis set (n=1,438).
+# Writes under Processed Data/experiments/expansion/step08_outputs/
+# (internal path; treat as primary analysis output).
+# Does not touch prior n=1,174 paths under step08_outputs_clean/.
 #
 # Set SKIP_ELEV_MCMC=1 to build descriptive fig6 panels only (no MCMCglmm).
 
@@ -63,7 +64,7 @@ theme_paper <- theme_minimal(base_size = 12) +
     panel.grid.minor = element_blank()
   )
 
-message("Loading expansion elevation data...")
+message("Loading primary-set elevation data...")
 
 df <- read.csv(input_pca, encoding = "UTF-8")
 env <- read.csv(input_env, encoding = "UTF-8") %>%
@@ -79,7 +80,7 @@ df <- df %>%
   )
 
 n_elev <- nrow(df)
-n_subtitle <- sprintf("Expanded set with elevation, n = %s",
+n_subtitle <- sprintf("Analysis set with elevation, n = %s",
                       format(n_elev, big.mark = ","))
 message("Species with elevation: ", n_elev)
 message("Elevation range (m): ", round(min(df$alt)), " – ", round(max(df$alt)))
@@ -288,7 +289,7 @@ p_pc2 <- ggplot(df, aes(x = elev_band, y = PC2, fill = elev_band)) +
 save_fig(file.path(fig_dir, "fig6_elevation_pc2_boxplot.png"), p_pc2, 10, 5)
 
 summary_lines <- c(
-  "Elevation Gradient Analysis — Expansion Summary",
+  "Elevation Gradient Analysis — Primary Analysis Summary",
   strrep("=", 50),
   paste("Date:", Sys.time()),
   paste("Species analysed:", nrow(df)),
@@ -298,7 +299,8 @@ summary_lines <- c(
   "Chi-square (colour x band):",
   capture.output(print(chi_test)),
   "",
-  "Outputs under Processed Data/experiments/expansion/step08_outputs/"
+  "Outputs under Processed Data/experiments/expansion/step08_outputs/",
+  "(internal path name retained; this is the primary analysis set, n=1,438)"
 )
 writeLines(summary_lines, file.path(output_dir, "elevation_analysis_summary.txt"))
 
@@ -320,6 +322,6 @@ for (t in c("elevation_band_summary.csv", "elevation_mcmc_results.csv",
   file.symlink(normalizePath(src), dst)
 }
 
-message("\nExpansion Step 08 complete")
+message("\nPrimary elevation Step 08 complete")
 message("Results: ", output_dir)
 message("Figures: ", fig_dir)

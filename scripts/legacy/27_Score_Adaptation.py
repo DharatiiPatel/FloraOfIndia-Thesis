@@ -46,7 +46,9 @@ FT = BASE / "Processed Data" / "experiments" / "finetune"
 
 csv.field_size_limit(sys.maxsize)
 
-spec = importlib.util.spec_from_file_location("lock", BASE / "scripts" / "25_Lock_Baselines.py")
+spec = importlib.util.spec_from_file_location(
+    "lock", Path(__file__).resolve().parent / "25_Lock_Baselines.py"
+)
 lock = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(lock)
 

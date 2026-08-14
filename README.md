@@ -105,7 +105,7 @@ in `files.exclude` to bring one back.
 |---|---:|
 | Unique treatments (clean parser) | 3,857 |
 | With morphological description | 3,230 |
-| Ecology *n* (colour + environment complete) | 1,174 |
+| Ecology *n* (colour + environment complete; primary) | 1,438 |
 | WHITE / YELLOW / REDTYPE | 502 / 428 / 244 |
 | Gold set labelled | 98 |
 | Best gold-set accuracy | 0.949 (Qwen-7B, RAG + categoriser v2) |

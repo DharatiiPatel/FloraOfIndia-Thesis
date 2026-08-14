@@ -2,7 +2,7 @@
 """
 Prove (or disprove) that species were actually lost to parsing.
 
-28_Diagnose_Unknown_Colour.py estimated that 758 species were dropped because
+28_Diagnose_Unknown_Colour.py (now scripts/legacy/) estimated that 758 species were dropped because
 their description was mis-parsed rather than because the Flora omits colour.
 That was inference from what the pipeline produced. This script tests it
 against the source: it goes back to the OCR'd volume text, locates each lost

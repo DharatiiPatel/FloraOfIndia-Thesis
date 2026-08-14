@@ -29,4 +29,4 @@ mkdir -p logs
 
 nvidia-smi
 
-python scripts/26_LoRA_Finetune.py --pilot --epochs 3
+python scripts/legacy/26_LoRA_Finetune.py --pilot --epochs 3

@@ -63,10 +63,10 @@ This is the “ecology + LLM application” foundation, analogous to Bamba & Sat
 | Volumes used | 8 |
 | Unique treatments (clean parser) | 3,857 |
 | With morphological description | 3,230 |
-| Final ecology *n* (colour + env complete) | **1,438** (expansion; prior clean set was 1,174) |
+| Final ecology *n* (colour + env complete) | **1,438** (primary analysis set; earlier clean subset was 1,174) |
 | WHITE / YELLOW / REDTYPE | 613 / 494 / 331 |
 | Env variables → PCA | 30 → PC1–PC10 (~97% variance) |
-| Headline ecology result | WHITE↑ with PC2; YELLOW↓ with PC2 (significant) |
+| Headline ecology result | WHITE↑ with PC2; YELLOW↓ with PC2 (significant); REDTYPE↓ with PC3 (significant on n=1,438) |
 
 ### 4.3 Figures already made (ecology / pipeline)
 
@@ -74,7 +74,7 @@ This is the “ecology + LLM application” foundation, analogous to Bamba & Sat
 |---|---|
 | `fig1_colour_counts` | How many species fall in each colour class — dataset composition |
 | `fig2_mcmc_coefficients` | Which environmental PCs predict each colour (forest-style coefficients) |
-| `fig2b_mcmc_env_variables` | Same idea for individual climate/soil variables *(not yet re-fit on expansion; omitted from published Results until single-variable models exist)* |
+| `fig2b_mcmc_env_variables` | Same idea for individual climate/soil variables *(not yet re-fit on n=1,438; omitted from published Results until single-variable models exist)* |
 | `fig3_pca_loadings` | What PC1/PC2 *mean* environmentally (loadings heatmap) |
 | `fig4_convergence` | MCMC diagnostics — models are trustworthy |
 | `fig5_pipeline_summary` | End-to-end pipeline overview |
@@ -95,7 +95,7 @@ This is what turns a replication into a **method thesis**. All of it lives under
 
 **What we did.** A treatment-focused parser that keeps species treatments, recovers abbreviated genera when justified, and deduplicates binomials.
 
-**Why it matters.** Higher GBIF match rate; final *n* stayed ~1,174 but on cleaner identities — quality over illusory sample-size inflation.
+**Why it matters.** Higher GBIF match rate on cleaner identities. The earlier clean ecology set was *n*=1,174; recovered treatments + fascicle colour later raised the **primary** analysis set to *n*=1,438.
 
 ### 5.2 Human gold standard (evaluation foundation)
 
@@ -264,7 +264,7 @@ the job logs; a small job, worth doing only if the professor wants the deploymen
 ## 8. What is finished vs still open
 
 ### Finished
-- Clean treatment pipeline + ecology *n* = 1,174  
+- Clean treatment pipeline; primary ecology analysis set *n* = 1,438 (earlier clean subset 1,174 retained for RQ4 / prediction)  
 - Gold set + multi-model benchmark  
 - Error taxonomy  
 - Categoriser v2 gains  
@@ -311,7 +311,7 @@ Always cite the categoriser version. 0.878 is zero-shot with categoriser v1; 0.9
 
 ## 10. Bottom line for the advisor
 
-1. The **ecology pipeline is complete** and produces a coherent Indian flower-colour–environment analysis (*n* = 1,174).  
+1. The **ecology pipeline is complete** and produces a coherent Indian flower-colour–environment analysis (*n* = 1,438).  
 2. The **CS contribution is in place**: benchmark, error taxonomy, **specificity-aware categorisation**, **RAG + abstention**, and downstream sensitivity.  
 3. That directly matches the request for **advanced work: RAG and specificity improvement**, with measured numbers, not only an engineering claim.  
 4. Remaining work is **writing**, not a new research direction. All experiments and figures are done; the open questions are scope decisions (full-corpus RAG, gold-set size), not missing results.

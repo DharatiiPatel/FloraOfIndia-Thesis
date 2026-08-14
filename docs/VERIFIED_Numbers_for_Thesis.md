@@ -1,25 +1,60 @@
-## 1. Clean ecology pipeline
+## 1. Primary ecology pipeline (analysis set)
 
 | Quantity | Exact value |
 |---|---:|
 | Unique species treatments | 3,857 |
 | Treatments with description | 3,230 |
-| Final analysis *n* (primary clean) | 1,174 |
-| WHITE / YELLOW / REDTYPE (primary) | 502 / 428 / 244 |
+| Final analysis *n* (**primary / published**) | **1,438** |
+| WHITE / YELLOW / REDTYPE | **613 / 494 / 331** |
 
-Source: `species_descriptions_treatments.csv`, `step05b_outputs_clean/species_color_environment_final_clean.csv`
+Source: `Processed Data/experiments/expansion/step05b_outputs/species_color_environment_final_expanded.csv`  
+(Internal folder name `experiments/expansion/` is retained for script paths; this is the **primary** analysis output.)  
+Figures: `Results/figures/` synced by `scripts/07_Generate_Figures_Expansion.R`.  
+Prior smaller set (n=1,174) backup: `Results/figures/main_n1174_backup/`.
 
-### Expansion ecology set (published figures)
+### Prior clean set (historical / RQ4 / prediction)
 
 | Quantity | Exact value |
 |---|---:|
-| Final analysis *n* (expansion; **published**) | **1,438** |
-| WHITE | 613 |
-| YELLOW | 494 |
-| REDTYPE | 331 |
+| Final analysis *n* (earlier clean set) | 1,174 |
+| WHITE / YELLOW / REDTYPE | 502 / 428 / 244 |
 
-Source: `Processed Data/experiments/expansion/step05b_outputs/species_color_environment_final_expanded.csv`  
-Figures: `Results/figures/` synced by `scripts/07_Generate_Figures_Expansion.R` (backup of prior set: `Results/figures/main_n1174_backup/`).
+Source: `Processed Data/experiments/step05b_outputs_clean/species_color_environment_final_clean.csv`  
+Used by RQ4 label-sensitivity and the prediction task; **not** the published ecology figure set.
+
+---
+
+## 1b. Ecology: n=1,174 clean vs n=1,438 primary (verified)
+
+### MCMCglmm colour × environmental PCs (genus random effect)
+
+Significant = pMCMC &lt; 0.05. Sources:  
+`step06_outputs_clean/tables/combined/all_fixed_effects_combined.csv` vs  
+`experiments/expansion/step06_outputs/tables/combined/all_fixed_effects_combined.csv`.
+
+| Effect | Clean n=1,174 | Primary n=1,438 | Change |
+|---|---|---|---|
+| WHITE ~ PC2 | +0.0718, p=0.0004 ✓ | +0.0720, p=0.0002 ✓ | **Same** (direction + sig) |
+| YELLOW ~ PC2 | −0.0841, p=0.0008 ✓ | −0.0697, p=0.0010 ✓ | **Same** (direction + sig; slightly smaller |β|) |
+| REDTYPE ~ PC3 | −0.0603, p=0.111 ✗ | −0.0776, p=0.0162 ✓ | **Newly significant** (same − direction) |
+| All other colour × PC1–PC10 | non-sig | non-sig | No other newly significant PC effects |
+
+**Headline claim (unchanged):** WHITE increases and YELLOW decreases with PC2.  
+**New secondary claim on primary set:** REDTYPE decreases with PC3 (p=0.016).
+
+### Elevation (genus-controlled MCMCglmm + χ²)
+
+Sources: `step08_outputs_clean/` vs `experiments/expansion/step08_outputs/`.
+
+| Test | Clean n=1,174 | Primary n=1,438 | Change |
+|---|---|---|---|
+| χ² colour × elev. band | X²=21.96, p=0.0050 ✓ | X²=31.25, p=0.00013 ✓ | **Same** (sig; stronger) |
+| WHITE ~ elevation | −0.109, p=0.058 ✗ | −0.123, p=0.022 ✓ | **Newly significant** (−) |
+| YELLOW ~ elevation | +0.036, p=0.602 ✗ | +0.011, p=0.869 ✗ | **Same** (non-sig) |
+| REDTYPE ~ elevation | +0.132, p=0.060 ✗ | +0.174, p=0.0064 ✓ | **Newly significant** (+) |
+
+**Correct claim on primary n=1,438:** colour composition differs across elevation bands; after genus control, WHITE declines and REDTYPE increases with elevation. YELLOW has no elevation association.  
+(Do not cite the earlier clean-set claim that *no* colour had a significant elevation slope — that applied only to n=1,174.)
 
 ---
 
@@ -67,7 +102,7 @@ Saved summary matches recomputation: `benchmark/benchmark_summary.csv`
 ## 5. RQ3 — RAG (Qwen-7B + 3 TF-IDF exemplars, leave-one-out)
 
 | Setup | n | Accuracy | # `uncertain` |
-|---|---:|---:|---:|
+|---|---:|---:|---|
 | Zero-shot + v1 | 98 | 0.8776 | 0 |
 | Zero-shot + v2 | 98 | 0.9388 | 0 |
 | RAG + v1 | 98 | 0.8980 | 5 |
@@ -156,7 +191,7 @@ and **all three LLMs tie at 0.8989** under v1 once junk is removed.
 **Scoring rule (required to reproduce the RAG figures):** RAG may output `uncertain`;
 those are scored as **UNKNOWN**, per `15_RAG_Extract_Gold.py`. Neither categoriser has a
 rule for `uncertain`, so without this mapping it falls through to OTHER and RAG scores
-0.8539/0.8989 instead. Verified by `25_Lock_Baselines.py`.
+0.8539/0.8989 instead. (Historical lock script: `scripts/legacy/25_Lock_Baselines.py`.)
 
 **Do not write** "RAG's only gain is abstention on malformed input" — that is wrong.
 Of RAG's 5 abstentions, **4 are on genuine species rows and 1 on a junk row**; all 4
@@ -170,7 +205,8 @@ species text while abstaining on rows that carry no colour information.*
 
 ## 7c. Prediction task (colour ~ environment)
 
-Source: `prediction_outputs/prediction_cv_summary.csv`. n=1,174 species, 338 genera, 5-fold CV.
+Source: `prediction_outputs/prediction_cv_summary.csv`. n=1,174 species, 338 genera, 5-fold CV
+(earlier clean set; prediction figures not yet refreshed on n=1,438).
 
 | Model | Accuracy | Balanced acc. | Macro-F1 [95% CI] |
 |---|---:|---:|---|
@@ -185,19 +221,17 @@ Permutation importance: PC2 = 0.0236, next axis PC4 = 0.0028 — PC2 independent
 
 ---
 
-## 7d. Elevation — clean pipeline (supersedes old numbers)
+## 7d. Elevation — primary set (n=1,438; supersedes clean n=1,174 wording)
 
-Source: `step08_outputs_clean/`. Old `step08_outputs/` numbers are superseded.
-
-| Test | Old data | **Clean data** |
+| Test | Clean n=1,174 | **Primary n=1,438** |
 |---|---|---|
-| Chi-square colour × band | X²=19.96, p=0.0105 | **X²=21.96, p=0.0050** |
-| WHITE ~ elevation | −0.107, p=0.071 ✗ | −0.109, p=0.058 ✗ |
-| YELLOW ~ elevation | +0.023, p=0.749 ✗ | +0.036, p=0.602 ✗ |
-| REDTYPE ~ elevation | +0.136, p=0.044 ✓ | **+0.132, p=0.060 ✗** |
+| Chi-square colour × band | X²=21.96, p=0.0050 | **X²=31.25, p=0.00013** |
+| WHITE ~ elevation | −0.109, p=0.058 ✗ | **−0.123, p=0.022 ✓** |
+| YELLOW ~ elevation | +0.036, p=0.602 ✗ | +0.011, p=0.869 ✗ |
+| REDTYPE ~ elevation | +0.132, p=0.060 ✗ | **+0.174, p=0.0064 ✓** |
 
-**Correct claim:** colour composition differs across elevation bands, but **no colour has a
-significant elevation association once genus is controlled.** Do not cite the old p=0.044 REDTYPE result.
+**Correct claim:** on the primary analysis set, colour composition differs across elevation bands;
+with genus controlled, WHITE declines and REDTYPE increases with elevation.
 
 ---
 
@@ -219,8 +253,9 @@ significant elevation association once genus is controlled.** Do not cite the ol
 2. Always state **which categoriser** (v1 original vs v2 improved).  
 3. Best accuracy claim: **0.949 with RAG + categoriser v2**, not “RAG alone = 0.949”.  
 4. Scale finding: **72B does not beat 7B under v1** (both 0.8776).  
-5. Ecology headline is **robust across four label sources**.  
-6. Do not claim full-corpus RAG — only gold-set RAG was run.
+5. Ecology headlines WHITE~PC2 / YELLOW~PC2 are **robust** (across label sources on n≈1,174 and on primary n=1,438).  
+6. Cite ecology composition / elevation from **n=1,438** unless explicitly discussing the earlier clean set or RQ4.  
+7. Do not claim full-corpus RAG — only gold-set RAG was run.
 
 ---
 
