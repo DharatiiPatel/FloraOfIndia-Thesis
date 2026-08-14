@@ -132,5 +132,5 @@ python -m venv .venv_figs && .venv_figs/bin/pip install matplotlib numpy pandas 
 .venv_figs/bin/python scripts/23_Build_Prediction_Figure.py
 ```
 
-GPU extraction and MCMC runs are submitted with `sbatch` from `scripts/*.slurm`.
+GPU extraction and MCMC runs are submitted with `sbatch` from `scripts/slurm/*.slurm`.
 Login nodes are for submission only.

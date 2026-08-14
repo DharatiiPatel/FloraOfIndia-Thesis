@@ -1,6 +1,6 @@
 #!/bin/bash
 # Regenerate figures after single-variable MCMC completes.
-# Usage: sbatch --dependency=afterok:45825091 scripts/run_07_after_06b.sh
+# Usage: sbatch --dependency=afterok:45825091 scripts/slurm/run_07_after_06b.sh
 #SBATCH --job-name=figures_post_sv
 #SBATCH --partition=batch
 #SBATCH --ntasks=1

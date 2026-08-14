@@ -429,14 +429,15 @@ All models converged excellently (MPSRF well below threshold of 1.1).
 │   ├── 06b_SingleVariable_MCMCglmm.R
 │   ├── 07_Generate_Figures.R
 │   ├── 08_ElevationGradient_Analysis.R
-│   ├── run_05a.sh                     # SLURM submission scripts
-│   ├── run_05b.sh
-│   ├── run_06.sh
-│   ├── run_06b.sh
-│   ├── run_07.sh
-│   ├── run_07_after_06b.sh
-│   ├── run_08.sh
-│   └── gpu_extract_flower_color_qwen.slurm
+│   └── slurm/                         # SLURM / job wrappers (sbatch from repo root)
+│       ├── run_05a.sh
+│       ├── run_05b.sh
+│       ├── run_06.sh
+│       ├── run_06b.sh
+│       ├── run_07.sh
+│       ├── run_07_after_06b.sh
+│       ├── run_08.sh
+│       └── …
 │   # NOTE: 01c_Parsing_to_species_fixed.py does NOT exist yet — TODO
 └── Processed Data/
     ├── flora_of_india_species_descriptions.csv

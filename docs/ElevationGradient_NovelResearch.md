@@ -20,7 +20,7 @@ The original China paper did **not** analyse elevation as a dedicated gradient. 
 ## What we are incorporating (Step 08)
 
 ### Script: `scripts/08_ElevationGradient_Analysis.R`
-### SLURM: `scripts/run_08.sh` (submit with `sbatch scripts/run_08.sh`)
+### SLURM: `scripts/slurm/run_08.sh` (submit with `sbatch scripts/slurm/run_08.sh`)
 
 ### Input data (already exists — no new scraping)
 - `Processed Data/step05_outputs/species_color_environment_final.csv` — colour flags + PC1–PC10
@@ -118,7 +118,7 @@ Species are assigned to bands using **trimmed-mean altitude** at GBIF occurrence
 ```bash
 # Submit to batch (do NOT run MCMC on login node)
 cd /scratch/dp23301/Thesis
-sbatch scripts/run_08.sh
+sbatch scripts/slurm/run_08.sh
 
 # Monitor
 squeue -u dp23301
@@ -143,7 +143,7 @@ tail -f logs/elev_grad_*.out
 | Job | Purpose | When done |
 |-----|---------|-----------|
 | `run_06b.sh` (45825091) | Single env-variable MCMC → fig2b | Days |
-| `run_08.sh` | **Elevation novel analysis** → fig6_* | ~1 day |
+| `scripts/slurm/run_08.sh` | **Elevation novel analysis** → fig6_* | ~1 day |
 | `run_07_after_06b.sh` | Regenerate fig2b after 06b | After 06b |
 
 Step 08 is **independent** — you can run it now while 06b continues.

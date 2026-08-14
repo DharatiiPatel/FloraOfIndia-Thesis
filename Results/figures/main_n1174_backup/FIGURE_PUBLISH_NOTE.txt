@@ -8,8 +8,8 @@ Backup of prior Results ecology set (n=1,174):
 Scripts:
   scripts/07_Generate_Figures_Expansion.R  -> Results fig1-5, figS, tables/mcmc
   scripts/08_ElevationGradient_Expansion.R -> Results fig6_*, tables/elevation
-  scripts/run_07_expansion.slurm / run_08_expansion.slurm
-  scripts/run_07.sh publishes the primary (n=1,438) figure generator
+  scripts/slurm/run_07_expansion.slurm / run_08_expansion.slurm
+  scripts/slurm/run_07.sh publishes the primary (n=1,438) figure generator
 
 Unchanged (method/gold/prediction; may still report n=1,174 where that is the fitted set):
   fig7-fig13 (22_Build_Method_Figures.py) — gold-set / label-variant WP4

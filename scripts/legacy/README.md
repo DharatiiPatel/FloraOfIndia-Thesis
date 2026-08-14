@@ -12,7 +12,7 @@ sense for the thesis scope (small labelled n; protocol abandoned):
 - `25_Lock_Baselines.py`
 - `26_LoRA_Finetune.py`
 - `27_Score_Adaptation.py`
-- `run_26_lora.slurm` / `run_26_lora_pilot.slurm`
+- `../slurm/run_26_lora.slurm` / `../slurm/run_26_lora_pilot.slurm` (moved to scripts/slurm/)
 
 ## UNKNOWN-colour diagnosis (archived 2026-08-14)
 
@@ -21,3 +21,7 @@ sense for the thesis scope (small labelled n; protocol abandoned):
 That diagnosis was **superseded by the recovery pipeline** (`scripts/29`+;
 fascicle OCR / recover lost treatments / colour extract). Keep 29+ as the
 active path; do not re-run 28 for thesis results.
+
+## Other moved SLURM wrappers
+
+- `gpu_extract_flower_color_qwen.slurm` → `scripts/slurm/` (with all other job wrappers).
