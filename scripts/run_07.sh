@@ -12,4 +12,6 @@
 
 cd /scratch/dp23301/Thesis
 module load R/4.5.1-gfbf-2025a
-Rscript scripts/07_Generate_Figures.R
+# Published Results/ ecology figures track expansion (n=1438).
+# Primary n=1174 generator remains: scripts/07_Generate_Figures.R
+Rscript scripts/07_Generate_Figures_Expansion.R

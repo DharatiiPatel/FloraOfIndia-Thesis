@@ -1,0 +1,23 @@
+Expansion figures published as thesis source of truth — 2026-08-14
+FIG_EXPAND job: 47467992 (COMPLETED)
+ELEV_EXPAND job: 47467993 (COMPLETED, 39 min)
+Analysis N: 1438 (WHITE 613 / YELLOW 494 / REDTYPE 331)
+
+Backup of prior Results ecology set:
+  Results/figures/main_n1174_backup/
+
+Scripts:
+  scripts/07_Generate_Figures_Expansion.R  -> Results fig1-5, figS, tables/mcmc
+  scripts/08_ElevationGradient_Expansion.R -> Results fig6_*, tables/elevation
+  scripts/run_07_expansion.slurm / run_08_expansion.slurm
+  scripts/run_07.sh now calls expansion figure generator
+
+Unchanged (method/gold/prediction; captions may still say n=1,174):
+  fig7-fig13 (22_Build_Method_Figures.py) — gold-set / label-variant WP4
+  fig14 (23_Build_Prediction_Figure.py) — prediction_outputs on primary set
+  fig2b omitted — no expansion single_variable_models.csv
+
+Revert ecology figures to n=1174:
+  cp Results/figures/main_n1174_backup/main/*.png Results/figures/main/
+  # or re-run: Rscript scripts/07_Generate_Figures.R
+  # and Rscript scripts/08_ElevationGradient_Analysis.R (uses clean paths)

@@ -63,8 +63,8 @@ This is the “ecology + LLM application” foundation, analogous to Bamba & Sat
 | Volumes used | 8 |
 | Unique treatments (clean parser) | 3,857 |
 | With morphological description | 3,230 |
-| Final ecology *n* (colour + env complete) | **1,174** |
-| WHITE / YELLOW / REDTYPE | 502 / 428 / 244 |
+| Final ecology *n* (colour + env complete) | **1,438** (expansion; prior clean set was 1,174) |
+| WHITE / YELLOW / REDTYPE | 613 / 494 / 331 |
 | Env variables → PCA | 30 → PC1–PC10 (~97% variance) |
 | Headline ecology result | WHITE↑ with PC2; YELLOW↓ with PC2 (significant) |
 
@@ -74,7 +74,7 @@ This is the “ecology + LLM application” foundation, analogous to Bamba & Sat
 |---|---|
 | `fig1_colour_counts` | How many species fall in each colour class — dataset composition |
 | `fig2_mcmc_coefficients` | Which environmental PCs predict each colour (forest-style coefficients) |
-| `fig2b_mcmc_env_variables` | Same idea for individual climate/soil variables |
+| `fig2b_mcmc_env_variables` | Same idea for individual climate/soil variables *(not yet re-fit on expansion; omitted from published Results until single-variable models exist)* |
 | `fig3_pca_loadings` | What PC1/PC2 *mean* environmentally (loadings heatmap) |
 | `fig4_convergence` | MCMC diagnostics — models are trustworthy |
 | `fig5_pipeline_summary` | End-to-end pipeline overview |

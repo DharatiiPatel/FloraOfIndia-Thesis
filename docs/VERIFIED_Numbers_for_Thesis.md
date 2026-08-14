@@ -4,12 +4,22 @@
 |---|---:|
 | Unique species treatments | 3,857 |
 | Treatments with description | 3,230 |
-| Final analysis *n* | **1,174** |
-| WHITE | 502 |
-| YELLOW | 428 |
-| REDTYPE | 244 |
+| Final analysis *n* (primary clean) | 1,174 |
+| WHITE / YELLOW / REDTYPE (primary) | 502 / 428 / 244 |
 
 Source: `species_descriptions_treatments.csv`, `step05b_outputs_clean/species_color_environment_final_clean.csv`
+
+### Expansion ecology set (published figures)
+
+| Quantity | Exact value |
+|---|---:|
+| Final analysis *n* (expansion; **published**) | **1,438** |
+| WHITE | 613 |
+| YELLOW | 494 |
+| REDTYPE | 331 |
+
+Source: `Processed Data/experiments/expansion/step05b_outputs/species_color_environment_final_expanded.csv`  
+Figures: `Results/figures/` synced by `scripts/07_Generate_Figures_Expansion.R` (backup of prior set: `Results/figures/main_n1174_backup/`).
 
 ---
 
