@@ -11,7 +11,7 @@ mkdir -p logs "Processed Data/experiments/expansion"
 
 echo "=== 0. Download missing fascicle PDFs (lightweight) ==="
 module load Python/3.13.5-GCCcore-14.3.0
-python scripts/30_Download_Fascicles.py
+python scripts/25_Download_Fascicles.py
 
 # Drop ballooned pilot OCR PDF if present (sidecar txt is enough)
 rm -f raw_data/fascicles/F11_Cucurbitaceae_ocr.pdf
@@ -19,22 +19,22 @@ rm -f raw_data/fascicles/F11_Cucurbitaceae_ocr.pdf
 echo ""
 echo "=== 1. Submit jobs ==="
 
-OCR=$(sbatch --parsable scripts/slurm/run_30_ocr_fascicles_array.slurm)
+OCR=$(sbatch --parsable scripts/slurm/run_25_ocr_fascicles_array.slurm)
 echo "OCR_ARRAY          $OCR  (array 1-24%6)"
 
-REC=$(sbatch --parsable scripts/slurm/run_31_recover_lost.slurm)
+REC=$(sbatch --parsable scripts/slurm/run_26_recover_lost.slurm)
 echo "RECOVER_LOST       $REC"
 
-PARSE=$(sbatch --parsable --dependency=afterok:${OCR} scripts/slurm/run_33_parse_fascicles.slurm)
+PARSE=$(sbatch --parsable --dependency=afterok:${OCR} scripts/slurm/run_28_parse_fascicles.slurm)
 echo "PARSE_FASCICLES    $PARSE  afterok:$OCR"
 
-BUILD_EX=$(sbatch --parsable --dependency=afterok:${PARSE}:${REC} scripts/slurm/run_35a_extract_input.slurm)
+BUILD_EX=$(sbatch --parsable --dependency=afterok:${PARSE}:${REC} scripts/slurm/run_30a_extract_input.slurm)
 echo "BUILD_EXTRACT_IN   $BUILD_EX  afterok:$PARSE:$REC"
 
-QWEN=$(sbatch --parsable --dependency=afterok:${BUILD_EX} scripts/slurm/run_34_extract_expansion.slurm)
+QWEN=$(sbatch --parsable --dependency=afterok:${BUILD_EX} scripts/slurm/run_29_extract_expansion.slurm)
 echo "QWEN_EXPAND        $QWEN  afterok:$BUILD_EX  (GPU)"
 
-BUILD_GB=$(sbatch --parsable --dependency=afterok:${QWEN} scripts/slurm/run_35b_gbif_input.slurm)
+BUILD_GB=$(sbatch --parsable --dependency=afterok:${QWEN} scripts/slurm/run_30b_gbif_input.slurm)
 echo "BUILD_GBIF_IN      $BUILD_GB  afterok:$QWEN"
 
 GBIF=$(sbatch --parsable --dependency=afterok:${BUILD_GB} scripts/slurm/run_05a_expansion.slurm)

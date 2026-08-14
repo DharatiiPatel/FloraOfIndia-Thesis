@@ -18,4 +18,4 @@ export HF_HUB_OFFLINE=1
 cd /scratch/dp23301/Thesis
 mkdir -p logs
 nvidia-smi || true
-python scripts/34_Extract_Expansion_Colour.py
+python scripts/29_Extract_Expansion_Colour.py

@@ -55,7 +55,7 @@ echo "host=$(hostname)  date=$(date)  fascicle=$N slug=$slug"
 echo "PDF=$PDF"
 
 if [[ ! -f "$PDF" ]]; then
-  echo "Missing PDF: $PDF  (run 30_Download_Fascicles.py first)"; exit 1
+  echo "Missing PDF: $PDF  (run 25_Download_Fascicles.py first)"; exit 1
 fi
 
 if [[ -f "$TXT" ]] && [[ $(wc -c < "$TXT") -gt 50000 ]]; then

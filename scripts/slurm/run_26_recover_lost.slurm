@@ -23,7 +23,7 @@ cd /scratch/dp23301/Thesis
 mkdir -p logs
 
 echo "host=$(hostname)  date=$(date)"
-python scripts/31_Recover_Lost_Treatments.py
+python scripts/26_Recover_Lost_Treatments.py
 echo "DONE $(date)"
 ls -la "Processed Data/experiments/recovered_treatments.csv" \
        "Processed Data/experiments/recovered_descriptions_for_extract.csv" \

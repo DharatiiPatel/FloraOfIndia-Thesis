@@ -29,7 +29,7 @@ lost ones, so that agreement rate is reported first and gates the result.
                                       clean_color_categories.csv
   WRITES : Processed Data/experiments/recoverable_verified.csv
 
-Usage:  python 29_Verify_Recoverable.py [--limit 400] [--control 150]
+Usage:  python 24_Verify_Recoverable.py [--limit 400] [--control 150]
 """
 
 from __future__ import annotations

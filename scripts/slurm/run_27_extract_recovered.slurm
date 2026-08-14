@@ -12,7 +12,7 @@
 #SBATCH --mail-user=dp23301@uga.edu
 
 # Colour extraction for recovered lost-species treatments.
-# Submit with: sbatch --dependency=afterok:<recover_jobid> scripts/slurm/run_32_extract_recovered.slurm
+# Submit with: sbatch --dependency=afterok:<recover_jobid> scripts/slurm/run_27_extract_recovered.slurm
 # Expects recovered_descriptions_for_extract.csv from job 31.
 
 set -euo pipefail
@@ -34,6 +34,6 @@ if [[ ! -f "$IN" ]]; then
 fi
 echo "input rows: $(($(wc -l < "$IN") - 1))"
 
-python scripts/32_Extract_Recovered_Colour.py
+python scripts/27_Extract_Recovered_Colour.py
 echo "DONE $(date)"
 ls -la "Processed Data/experiments/flower_color_recovered.csv"

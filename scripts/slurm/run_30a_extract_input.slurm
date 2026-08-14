@@ -11,4 +11,4 @@
 set -euo pipefail
 module load Python/3.13.5-GCCcore-14.3.0
 cd /scratch/dp23301/Thesis
-python scripts/35_Build_Expansion_Set.py --stage extract-input
+python scripts/30_Build_Expansion_Set.py --stage extract-input

@@ -19,7 +19,7 @@ Wrappers `cd` to the Thesis root before calling `python scripts/...` or
 
 ## Notes
 
-- Active ecology / expansion / OCR / recovery jobs: `run_05*`–`run_08*`, `run_30*`–`run_35*`.
+- Active ecology / expansion / OCR / recovery jobs: `run_05*`–`run_08*`, `run_25*`–`run_30*`.
 - Multimodel / RAG / MCMC array: `run_11_*`, `run_15_rag.slurm`, `run_19_array.slurm`.
 - Archived LoRA jobs (Python stays in `scripts/legacy/`): `run_26_lora*.slurm`.
 - Older GBIF/env wrappers renamed on move: `run_05a_legacy.sh`, `run_05b_legacy.sh`.

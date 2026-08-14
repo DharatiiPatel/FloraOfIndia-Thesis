@@ -12,4 +12,4 @@ set -euo pipefail
 module load Python/3.13.5-GCCcore-14.3.0
 cd /scratch/dp23301/Thesis
 mkdir -p logs
-python scripts/33_Parse_Fascicles.py
+python scripts/28_Parse_Fascicles.py

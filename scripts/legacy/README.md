@@ -18,7 +18,7 @@ sense for the thesis scope (small labelled n; protocol abandoned):
 
 - `28_Diagnose_Unknown_Colour.py` — early diagnosis of UNKNOWN / dropped species.
 
-That diagnosis was **superseded by the recovery pipeline** (`scripts/29`+;
+That diagnosis was **superseded by the recovery pipeline** (`scripts/24`+;
 fascicle OCR / recover lost treatments / colour extract). Keep 29+ as the
 active path; do not re-run 28 for thesis results.
 
