@@ -1,9 +1,6 @@
 {
-  "chatgpt.openOnStartup": true,
-
-  // Hidden from the Explorer: caches, installed libraries and the figure
-  // virtualenv. Nothing here is source or results - it is ~10,700 of the
-  // ~11,700 files in the workspace. Set any entry to false to show it again.
+  // Hidden from the Explorer: caches, installed libraries, and the figure
+  // virtualenv. Set any entry to false to show it again.
   "files.exclude": {
     "**/__pycache__": true,
     ".venv_figs": true,
@@ -34,7 +31,7 @@
     "logs/**": true
   },
 
-  "explorer.sortOrder": "type",
+  "explorer.sortOrder": "filesFirst",
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {

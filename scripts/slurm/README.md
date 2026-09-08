@@ -1,25 +1,16 @@
-# SLURM / job wrappers
+# Cluster jobs
 
-All cluster submission scripts live here (`run_*.slurm`, `run_*.sh`, and
-`submit_expansion_chain.sh`). Pipeline `.py` / `.R` scripts stay in `scripts/`
-(and `scripts/legacy/`).
-
-## Submit from repo root
+Submit from the thesis root:
 
 ```bash
 cd /scratch/dp23301/Thesis
 sbatch scripts/slurm/<name>.slurm
-# or
-bash scripts/slurm/submit_expansion_chain.sh
 ```
 
-Wrappers `cd` to the Thesis root before calling `python scripts/...` or
-`Rscript scripts/...`, so relative paths remain correct when submitted via
-`sbatch scripts/slurm/...`. Log paths use absolute `/scratch/dp23301/Thesis/logs/`.
-
-## Notes
-
-- Active ecology / expansion / OCR / recovery jobs: `run_05*`–`run_08*`, `run_25*`–`run_30*`.
-- Multimodel / RAG / MCMC array: `run_11_*`, `run_15_rag.slurm`, `run_19_array.slurm`.
-- Archived LoRA jobs (Python stays in `scripts/legacy/`): `run_26_lora*.slurm`.
-- Older GBIF/env wrappers renamed on move: `run_05a_legacy.sh`, `run_05b_legacy.sh`.
+| Jobs | Scripts they run |
+|------|------------------|
+| `run_02` | colour extraction |
+| `run_04*` | fascicles and recovery |
+| `run_05a` `run_05b` `run_06` `run_06b` `run_07` `run_08` | GBIF, environment, models, figures |
+| `run_11_*` `run_15_rag` `run_19_array` | gold-set models, RAG, label-sensitivity MCMC |
+| `submit_full_dataset.sh` | fascicles + recovery, then GBIF / models / figures |

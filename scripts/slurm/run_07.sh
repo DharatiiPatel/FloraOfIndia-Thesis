@@ -12,6 +12,5 @@
 
 cd /scratch/dp23301/Thesis
 module load R/4.5.1-gfbf-2025a
-# Published Results/ ecology figures track the primary analysis set (n=1,438).
-# Prior n=1,174 generator remains: scripts/07_Generate_Figures.R
-Rscript scripts/07_Generate_Figures_Expansion.R
+# Primary ecology figures (n=1,438).
+Rscript scripts/07_Generate_Figures.R

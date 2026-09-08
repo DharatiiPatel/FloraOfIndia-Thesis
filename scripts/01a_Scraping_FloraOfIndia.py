@@ -1,14 +1,17 @@
+import csv
+from pathlib import Path
+
 import requests
 from bs4 import BeautifulSoup
-import csv
 
+BASE = Path("/scratch/dp23301/Thesis")
 base_url = "https://bsi.gov.in/page/en/flora-of-india"
 
 target_volumes = [
     "Vol. 1", "Vol. 2", "Vol. 3", "Vol. 4", "Vol. 5", "Vol. 12", "Vol. 13", "Vol. 23"
 ]
 
-output_csv = "../raw_data/flora_of_india_volumes.csv"
+output_csv = str(BASE / "raw_data" / "flora_of_india_volumes.csv")
 
 response = requests.get(base_url)
 if response.status_code != 200:

@@ -1,7 +1,8 @@
 from pdfminer.high_level import extract_text
 import os
+from pathlib import Path
 
-raw_data_dir = "../raw_data"
+raw_data_dir = str(Path("/scratch/dp23301/Thesis") / "raw_data")
 pdf_files = [
     "FLORA OF INDIA VOL.1.pdf",
     "FLORA OF INDIA VOL.2.pdf",
