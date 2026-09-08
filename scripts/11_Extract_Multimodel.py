@@ -39,7 +39,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 
 BASE_DIR = Path("/scratch/dp23301/Thesis")
 
-# IDENTICAL prompt to scripts/legacy/02_Extract_flower_color_qwen_gpu.py (the baseline),
+# IDENTICAL prompt to the original step-02 extractor,
 # so cross-model differences reflect the MODEL, not the prompt.
 SYSTEM_MESSAGE = (
     "You are an expert botanist. Your ONLY job is to extract the flower colour "

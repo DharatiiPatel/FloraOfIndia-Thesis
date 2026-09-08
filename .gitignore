@@ -23,4 +23,5 @@ __pycache__/
 
 # Local tooling (recreate with: python -m venv .venv_figs)
 .venv_figs/
+.venv_pptx/
 R_library/

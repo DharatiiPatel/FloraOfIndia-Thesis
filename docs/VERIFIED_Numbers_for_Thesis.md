@@ -1,7 +1,7 @@
 ## 1. Primary ecology pipeline (analysis set)
 
 | Quantity | Exact value |
-|---|---:|
+
 | Unique species treatments | 3,857 |
 | Treatments with description | 3,230 |
 | Final analysis *n* (**primary / published**) | **1,438** |
@@ -9,8 +9,8 @@
 
 Source: `Processed Data/experiments/expansion/step05b_outputs/species_color_environment_final_expanded.csv`  
 (Internal folder name `experiments/expansion/` is retained for script paths; this is the **primary** analysis output.)  
-Figures: `Results/figures/` synced by `scripts/07_Generate_Figures_Expansion.R`.  
-Prior smaller set (n=1,174) backup: `Results/figures/main_n1174_backup/`.
+Figures: `Results/figures/` synced by `scripts/07_Generate_Figures.R`.  
+The earlier n=1,174 ecology outputs remain under `Processed Data/experiments/` (not published figures).
 
 ### Prior clean set (historical / RQ4 / prediction)
 

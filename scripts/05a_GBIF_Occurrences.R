@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
-# GBIF fetch. Faithful copy of scripts/legacy/05a_GBIF_seed_cache.R with paths
-# redirected to experiments/. Uses a SEPARATE cache so the original is untouched.
+# GBIF occurrence fetch. Writes to Processed Data/experiments/.
+# Uses a separate cache so the original download is untouched.
 
 .libPaths(c("~/R/library", .libPaths()))
 options(stringsAsFactors = FALSE)

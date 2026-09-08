@@ -1,12 +1,17 @@
 #!/usr/bin/env Rscript
+# Elevation-gradient analysis on the primary analysis set (n=1,438).
+# Writes under Processed Data/experiments/expansion/step08_outputs/
+# (internal path; treat as primary analysis output).
+# Does not touch prior n=1,174 paths under step08_outputs_clean/.
+#
+# Set SKIP_ELEV_MCMC=1 to build descriptive fig6 panels only (no MCMCglmm).
 
 .libPaths(c("/scratch/dp23301/Thesis/R_library", "~/R/library", .libPaths()))
 options(stringsAsFactors = FALSE)
+options(bitmapType = "cairo")
 
 for (pkg in c("MCMCglmm", "ggplot2", "patchwork", "dplyr", "tidyr", "scales")) {
-  if (!requireNamespace(pkg, quietly = TRUE)) {
-    stop("Missing package: ", pkg)
-  }
+  if (!requireNamespace(pkg, quietly = TRUE)) stop("Missing package: ", pkg)
   if (pkg == "MCMCglmm") library(MCMCglmm, quietly = TRUE)
 }
 library(ggplot2)
@@ -15,22 +20,20 @@ library(dplyr)
 library(tidyr)
 library(scales)
 
-base_dir    <- "/scratch/dp23301/Thesis"
+base_dir <- "/scratch/dp23301/Thesis"
+source(file.path(base_dir, "scripts/lib/figure_style.R"))
 
-# Publication styling for the bar charts lives here so that
-# scripts/rebuild_bar_figures.R and this script cannot drift apart.
-source(file.path(base_dir, "scripts/figure_style.R"))
-
-input_pca   <- file.path(base_dir, "Processed Data/experiments/step05b_outputs_clean/species_color_environment_final_clean.csv")
-input_env   <- file.path(base_dir, "Processed Data/experiments/step05b_outputs_clean/species_environment_trimmed.csv")
-output_dir  <- file.path(base_dir, "Processed Data/step08_outputs_clean")
+exp_root    <- file.path(base_dir, "Processed Data/experiments/expansion")
+input_pca   <- file.path(exp_root, "step05b_outputs/species_color_environment_final_expanded.csv")
+input_env   <- file.path(exp_root, "step05b_outputs/species_environment_trimmed.csv")
+output_dir  <- file.path(exp_root, "step08_outputs")
 fig_dir     <- file.path(output_dir, "figures")
 
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(fig_dir,     recursive = TRUE, showWarnings = FALSE)
 
-#Elevation band definitions (India-relevant, metres)
-# Documented in ElevationGradient_NovelResearch.md
+skip_mcmc <- identical(Sys.getenv("SKIP_ELEV_MCMC", ""), "1")
+
 ELEV_BREAKS <- c(-Inf, 500, 1500, 3000, 4500, Inf)
 ELEV_LABELS <- c(
   "Lowland\n(0–500 m)",
@@ -61,8 +64,7 @@ theme_paper <- theme_minimal(base_size = 12) +
     panel.grid.minor = element_blank()
   )
 
-#Build analysis dataset with elevation
-message("Loading data...")
+message("Loading primary-set elevation data...")
 
 df <- read.csv(input_pca, encoding = "UTF-8")
 env <- read.csv(input_env, encoding = "UTF-8") %>%
@@ -73,37 +75,37 @@ df <- df %>%
   filter(!is.na(alt), alt >= 0) %>%
   mutate(
     genus      = sapply(strsplit(query_name, " "), function(x) x[1]),
-    elev_band  = assign_elev_band(alt), #assigns the elevation band to the species based on the altitude.
-    alt_scaled = scale(alt)[, 1] #scales the altitude to have mean 0 and standard deviation 1.
+    elev_band  = assign_elev_band(alt),
+    alt_scaled = scale(alt)[, 1]
   )
 
-message("Species with elevation: ", nrow(df))
+n_elev <- nrow(df)
+n_subtitle <- sprintf("Analysis set with elevation, n = %s",
+                      format(n_elev, big.mark = ","))
+message("Species with elevation: ", n_elev)
 message("Elevation range (m): ", round(min(df$alt)), " – ", round(max(df$alt)))
 
 write.csv(df, file.path(output_dir, "species_with_elevation.csv"), row.names = FALSE)
-
-# RQ1 — Colour proportions by elevation band
 
 message("\nRQ1: Colour proportions by elevation band...")
 
 band_summary <- df %>%
   group_by(elev_band) %>%
   summarise(
-    n_species  = n(),
-    n_white    = sum(is_white),
-    n_yellow   = sum(is_yellow),
-    n_redtype  = sum(is_redtype),
-    pct_white  = 100 * mean(is_white), #calculates the percentage of white flowers in the elevation band.
-    pct_yellow = 100 * mean(is_yellow), #calculates the percentage of yellow flowers in the elevation band.
-    pct_redtype = 100 * mean(is_redtype), #calculates the percentage of red-type flowers in the elevation band.
-    median_alt = median(alt), #calculates the median altitude of the species in the elevation band.
-    .groups = "drop" #drops the grouping after summarizing.
+    n_species   = n(),
+    n_white     = sum(is_white),
+    n_yellow    = sum(is_yellow),
+    n_redtype   = sum(is_redtype),
+    pct_white   = 100 * mean(is_white),
+    pct_yellow  = 100 * mean(is_yellow),
+    pct_redtype = 100 * mean(is_redtype),
+    median_alt  = median(alt),
+    .groups = "drop"
   )
 
 write.csv(band_summary, file.path(output_dir, "elevation_band_summary.csv"), row.names = FALSE)
 print(band_summary)
 
-# Chi-square: colour category vs elevation band
 colour_long <- df %>%
   mutate(colour_label = case_when(
     is_white  == 1 ~ "WHITE",
@@ -113,16 +115,12 @@ colour_long <- df %>%
   )) %>%
   filter(!is.na(colour_label))
 
-chi_tab <- table(colour_long$elev_band, colour_long$colour_label)
+chi_tab  <- table(colour_long$elev_band, colour_long$colour_label)
 chi_test <- chisq.test(chi_tab)
 message("\nChi-square test (colour × elevation band):")
 message("  X² = ", round(chi_test$statistic, 3), ", df = ", chi_test$parameter,
         ", p = ", format.pval(chi_test$p.value, digits = 3))
-
 writeLines(capture.output(print(chi_test)), file.path(output_dir, "elevation_chisq_test.txt"))
-
-
-# RQ2 — MCMCglmm: elevation predicts each colour (genus random effect)
 
 message("\nRQ2: MCMCglmm models — colour ~ elevation...")
 
@@ -136,72 +134,71 @@ mcmc_results <- list()
 elev_effects <- NULL
 elev_csv     <- file.path(output_dir, "elevation_mcmc_results.csv")
 
-if (file.exists(elev_csv)) {
+if (skip_mcmc && !file.exists(elev_csv)) {
+  message("SKIP_ELEV_MCMC=1 and no cached elevation_mcmc_results.csv — skipping MCMC.")
+} else if (file.exists(elev_csv)) {
   message("Skipping MCMC — loading ", elev_csv)
   elev_effects <- read.csv(elev_csv)
 } else {
-for (color_info in colors_to_run) {
-  message("\n", strrep("─", 50))
-  message("MCMCglmm: ", color_info$label, " ~ alt_scaled + genus")
-  message(strrep("─", 50))
+  for (color_info in colors_to_run) {
+    message("\n", strrep("─", 50))
+    message("MCMCglmm: ", color_info$label, " ~ alt_scaled + genus")
+    message(strrep("─", 50))
 
-  set.seed(42)
-  model <- tryCatch({
-    MCMCglmm(
-      fixed   = as.formula(paste(color_info$col, "~ alt_scaled")),
-      random  = ~ genus,
-      data    = df,
-      family  = "threshold",
-      prior   = PRIOR,
-      nitt    = NITT,
-      burnin  = BURNIN,
-      thin    = THIN,
-      verbose = TRUE
-    )
-  }, error = function(e) {
-    message("ERROR: ", conditionMessage(e))
-    NULL
-  })
+    set.seed(42)
+    model <- tryCatch({
+      MCMCglmm(
+        fixed   = as.formula(paste(color_info$col, "~ alt_scaled")),
+        random  = ~ genus,
+        data    = df,
+        family  = "threshold",
+        prior   = PRIOR,
+        nitt    = NITT,
+        burnin  = BURNIN,
+        thin    = THIN,
+        verbose = TRUE
+      )
+    }, error = function(e) {
+      message("ERROR: ", conditionMessage(e))
+      NULL
+    })
 
-  if (!is.null(model)) {
-    summ <- as.data.frame(summary(model)$solutions)
-    summ$variable <- rownames(summ)
-    summ$color    <- color_info$label
-    rownames(summ) <- NULL
-    if ("post.mean" %in% names(summ)) {
-      names(summ)[names(summ) == "post.mean"] <- "mean"
-      names(summ)[names(summ) == "l-95% CI"]  <- "lower"
-      names(summ)[names(summ) == "u-95% CI"]  <- "upper"
+    if (!is.null(model)) {
+      summ <- as.data.frame(summary(model)$solutions)
+      summ$variable <- rownames(summ)
+      summ$color    <- color_info$label
+      rownames(summ) <- NULL
+      if ("post.mean" %in% names(summ)) {
+        names(summ)[names(summ) == "post.mean"] <- "mean"
+        names(summ)[names(summ) == "l-95% CI"]  <- "lower"
+        names(summ)[names(summ) == "u-95% CI"]  <- "upper"
+      }
+      mcmc_results[[color_info$label]] <- summ
+      saveRDS(model, file.path(output_dir, paste0("model_elev_", color_info$label, ".rds")))
     }
-    mcmc_results[[color_info$label]] <- summ
-    saveRDS(model, file.path(output_dir, paste0("model_elev_", color_info$label, ".rds")))
+  }
+
+  if (length(mcmc_results) > 0) {
+    elev_effects <- bind_rows(mcmc_results)
+    write.csv(elev_effects, elev_csv, row.names = FALSE)
+    message("\nSaved: elevation_mcmc_results.csv")
   }
 }
-
-if (length(mcmc_results) > 0) {
-  elev_effects <- bind_rows(mcmc_results)
-  write.csv(elev_effects, elev_csv, row.names = FALSE)
-  message("\nSaved: elevation_mcmc_results.csv")
-}
-}
-
-# RQ3 — PC2 mean by elevation band (context for replication finding)
 
 message("\nRQ3: PC2 by elevation band...")
 
 pc2_by_band <- df %>%
   group_by(elev_band) %>%
   summarise(
-    n          = n(),
-    mean_PC2   = mean(PC2, na.rm = TRUE),
-    sd_PC2     = sd(PC2, na.rm = TRUE),
-    mean_alt   = mean(alt),
+    n        = n(),
+    mean_PC2 = mean(PC2, na.rm = TRUE),
+    sd_PC2   = sd(PC2, na.rm = TRUE),
+    mean_alt = mean(alt),
     .groups = "drop"
   )
 
 write.csv(pc2_by_band, file.path(output_dir, "pc2_by_elevation_band.csv"), row.names = FALSE)
 
-#Figures
 message("\nGenerating elevation figures...")
 
 save_fig <- function(out_path, plot, w, h) {
@@ -209,7 +206,6 @@ save_fig <- function(out_path, plot, w, h) {
   message("  Saved: ", basename(out_path))
 }
 
-# Fig A: Stacked proportion of colours by elevation band
 prop_df <- band_summary %>%
   select(elev_band, pct_white, pct_yellow, pct_redtype) %>%
   pivot_longer(-elev_band, names_to = "colour", values_to = "pct") %>%
@@ -217,11 +213,10 @@ prop_df <- band_summary %>%
     pct_white = "WHITE", pct_yellow = "YELLOW", pct_redtype = "REDTYPE"
   ))
 
-p_prop <- plot_elev_proportions(prop_df, band_summary)
-
+p_prop <- plot_elev_proportions(prop_df, band_summary) +
+  labs(caption = n_subtitle)
 save_fig(file.path(fig_dir, "fig6_elevation_colour_proportions.png"), p_prop, 8.6, 4.8)
 
-# Fig B: Species count by band (stacked absolute)
 count_df <- band_summary %>%
   select(elev_band, n_white, n_yellow, n_redtype) %>%
   pivot_longer(-elev_band, names_to = "colour", values_to = "n") %>%
@@ -229,26 +224,32 @@ count_df <- band_summary %>%
     n_white = "WHITE", n_yellow = "YELLOW", n_redtype = "REDTYPE"
   ))
 
-p_count <- plot_elev_counts(count_df, band_summary)
-
+p_count <- plot_elev_counts(count_df, band_summary) +
+  labs(caption = n_subtitle)
 save_fig(file.path(fig_dir, "fig6_elevation_species_counts.png"), p_count, 9.2, 4.8)
 
-# Fig C: Altitude distribution by colour (density)
 p_density <- ggplot(df, aes(x = alt, fill = color_group)) +
   geom_density(alpha = 0.45, colour = NA) +
   scale_fill_manual(values = COLOR_PANEL, name = "Colour group") +
   scale_x_continuous(labels = comma) +
   labs(
     title = "Elevation Distribution of Species by Flower Colour",
-    subtitle = "WorldClim altitude (m) at GBIF occurrence locations — species-level trimmed mean",
+    subtitle = paste0("WorldClim altitude (species-level trimmed mean) — ", n_subtitle),
     x = "Elevation (m)", y = "Density"
   ) +
   theme_paper
 
 save_fig(file.path(fig_dir, "fig6_elevation_density.png"), p_density, 10, 5)
 
-# Fig D: MCMC forest plot for elevation effect (if models ran)
 if (!is.null(elev_effects) && nrow(elev_effects) > 0) {
+  # Normalise column names if loaded from CSV with mangled names
+  nm <- names(elev_effects)
+  if ("post.mean" %in% nm) names(elev_effects)[nm == "post.mean"] <- "mean"
+  if ("l.95..CI" %in% names(elev_effects)) names(elev_effects)[names(elev_effects) == "l.95..CI"] <- "lower"
+  if ("u.95..CI" %in% names(elev_effects)) names(elev_effects)[names(elev_effects) == "u.95..CI"] <- "upper"
+  if ("l-95% CI" %in% names(elev_effects)) names(elev_effects)[names(elev_effects) == "l-95% CI"] <- "lower"
+  if ("u-95% CI" %in% names(elev_effects)) names(elev_effects)[names(elev_effects) == "u-95% CI"] <- "upper"
+
   eff_plot <- elev_effects %>%
     filter(variable != "(Intercept)") %>%
     mutate(
@@ -264,21 +265,22 @@ if (!is.null(elev_effects) && nrow(elev_effects) > 0) {
     scale_fill_manual(values = c("TRUE" = COL_SIG, "FALSE" = "white"), guide = "none") +
     labs(
       title = "Elevation Effect on Flower Colour (MCMCglmm)",
-      subtitle = "Posterior mean ± 95% CI; alt scaled to unit variance; genus random effect",
+      subtitle = paste0("Posterior mean ± 95% CI; alt scaled; genus RE — ", n_subtitle),
       x = "Coefficient (alt_scaled)", y = NULL
     ) +
     theme_paper
 
   save_fig(file.path(fig_dir, "fig6_elevation_mcmc_coefficients.png"), p_mcmc, 8, 4)
+} else {
+  message("  fig6_elevation_mcmc_coefficients skipped (no elevation MCMC results yet).")
 }
 
-# Fig E: PC2 by elevation band (environmental context)
 p_pc2 <- ggplot(df, aes(x = elev_band, y = PC2, fill = elev_band)) +
   geom_boxplot(outlier.size = 0.8, alpha = 0.7, show.legend = FALSE) +
   geom_hline(yintercept = 0, linetype = "dashed", colour = "grey50") +
   labs(
     title = "Environmental PC2 across Elevation Bands",
-    subtitle = "PC2 = fertile-wet-acidic forest soil axis (see main results)",
+    subtitle = paste0("PC2 = fertile-wet-acidic forest soil axis — ", n_subtitle),
     x = NULL, y = "PC2 score"
   ) +
   theme_paper +
@@ -286,33 +288,40 @@ p_pc2 <- ggplot(df, aes(x = elev_band, y = PC2, fill = elev_band)) +
 
 save_fig(file.path(fig_dir, "fig6_elevation_pc2_boxplot.png"), p_pc2, 10, 5)
 
-
-# Text summary for thesis
 summary_lines <- c(
-  "Elevation Gradient Analysis — Summary",
+  "Elevation Gradient Analysis — Primary Analysis Summary",
   strrep("=", 50),
   paste("Date:", Sys.time()),
   paste("Species analysed:", nrow(df)),
   paste("Elevation range (m):", round(min(df$alt)), "-", round(max(df$alt))),
-  "",
-  "Research questions:",
-  "  RQ1: Colour proportions vary across elevation bands?",
-  "  RQ2: Elevation predicts colour after genus random effect (MCMCglmm)?",
-  "  RQ3: PC2 (main env axis) shifts with elevation?",
+  paste("SKIP_ELEV_MCMC:", skip_mcmc),
   "",
   "Chi-square (colour x band):",
   capture.output(print(chi_test)),
   "",
-  "Outputs:",
-  "  species_with_elevation.csv",
-  "  elevation_band_summary.csv",
-  "  elevation_mcmc_results.csv",
-  "  pc2_by_elevation_band.csv",
-  "  figures/fig6_elevation_*.png"
+  "Outputs under Processed Data/experiments/expansion/step08_outputs/",
+  "(internal path name retained; this is the primary analysis set, n=1,438)"
 )
-
 writeLines(summary_lines, file.path(output_dir, "elevation_analysis_summary.txt"))
 
-message("\n Step 08 Complete")
+# Publish elevation figures into Results if present
+res_elev <- file.path(base_dir, "Results/figures/ecology")
+dir.create(res_elev, recursive = TRUE, showWarnings = FALSE)
+for (f in list.files(fig_dir, pattern = "\\.png$")) {
+  dst <- file.path(res_elev, f)
+  if (file.exists(dst) || !is.na(Sys.readlink(dst))) try(unlink(dst), silent = TRUE)
+  file.copy(file.path(fig_dir, f), dst, overwrite = TRUE)
+}
+for (t in c("elevation_band_summary.csv", "elevation_mcmc_results.csv",
+            "pc2_by_elevation_band.csv", "elevation_analysis_summary.txt")) {
+  src <- file.path(output_dir, t)
+  if (!file.exists(src)) next
+  dst <- file.path(base_dir, "Results/tables/elevation", t)
+  dir.create(dirname(dst), recursive = TRUE, showWarnings = FALSE)
+  if (file.exists(dst) || !is.na(Sys.readlink(dst))) try(unlink(dst), silent = TRUE)
+  file.copy(src, dst, overwrite = TRUE)
+}
+
+message("\nPrimary elevation Step 08 complete")
 message("Results: ", output_dir)
 message("Figures: ", fig_dir)
