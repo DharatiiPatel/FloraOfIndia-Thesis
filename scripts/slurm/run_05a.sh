@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH --job-name=gbif_clean
+#SBATCH --job-name=gbif
 #SBATCH --partition=batch
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
 #SBATCH --time=48:00:00
-#SBATCH --output=/scratch/dp23301/Thesis/logs/gbif_clean_%j.out
-#SBATCH --error=/scratch/dp23301/Thesis/logs/gbif_clean_%j.err
+#SBATCH --output=/scratch/dp23301/Thesis/logs/gbif_%j.out
+#SBATCH --error=/scratch/dp23301/Thesis/logs/gbif_%j.err
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=dp23301@uga.edu
 

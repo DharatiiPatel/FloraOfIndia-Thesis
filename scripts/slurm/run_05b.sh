@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH --job-name=env_data_clean
+#SBATCH --job-name=env_data
 #SBATCH --partition=batch
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
 #SBATCH --time=06:00:00
-#SBATCH --output=/scratch/dp23301/Thesis/logs/env_data_clean_%j.out
-#SBATCH --error=/scratch/dp23301/Thesis/logs/env_data_clean_%j.err
+#SBATCH --output=/scratch/dp23301/Thesis/logs/env_data_%j.out
+#SBATCH --error=/scratch/dp23301/Thesis/logs/env_data_%j.err
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=dp23301@uga.edu
 

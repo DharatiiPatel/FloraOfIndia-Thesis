@@ -45,40 +45,45 @@ echo "ENV                $ENV  afterok:$GBIF"
 MCMC=$(sbatch --parsable --dependency=afterok:${ENV} scripts/slurm/run_06.sh)
 echo "MCMC               $MCMC  afterok:$ENV"
 
-FIG=$(sbatch --parsable --dependency=afterok:${MCMC} scripts/slurm/run_07.sh)
-echo "FIG                $FIG  afterok:$MCMC"
+ELEV=$(sbatch --parsable --dependency=afterok:${ENV} scripts/slurm/run_08.slurm)
+echo "ELEVATION          $ELEV  afterok:$ENV"
+
+FIG=$(sbatch --parsable --dependency=afterok:${MCMC}:${ELEV} scripts/slurm/run_07.sh)
+echo "FIG                $FIG  afterok:$MCMC:$ELEV"
 
 JOBS_FILE=Processed\ Data/experiments/expansion/JOB_CHAIN.txt
 cat > "$JOBS_FILE" <<EOF
-Expansion job chain submitted $(date -Is)
-Primary n=1174 paths are untouched.
+Primary (n=1,438) job chain submitted $(date -Is)
 
 OCR_ARRAY=$OCR
 RECOVER_LOST=$REC
 PARSE_FASCICLES=$PARSE
 BUILD_EXTRACT_IN=$BUILD_EX
-QWEN_EXPAND=$QWEN
+QWEN_COLOUR=$QWEN
 BUILD_GBIF_IN=$BUILD_GB
-GBIF_EXPAND=$GBIF
-ENV_EXPAND=$ENV
-MCMC_EXPAND=$MCMC
-FIG_EXPAND=$FIG
+GBIF=$GBIF
+ENV=$ENV
+MCMC=$MCMC
+ELEVATION=$ELEV
+FIG=$FIG
 
 Dependency graph:
   OCR_ARRAY ──────────────────────────> PARSE_FASCICLES ──┐
   RECOVER_LOST ───────────────────────────────────────────┴> BUILD_EXTRACT_IN
-        -> QWEN_EXPAND -> BUILD_GBIF_IN -> GBIF_EXPAND
-        -> ENV_EXPAND -> MCMC_EXPAND -> FIG_EXPAND
+        -> QWEN_COLOUR -> BUILD_GBIF_IN -> GBIF -> ENV
+        -> MCMC (after ENV)
+        -> ELEVATION (after ENV)
+        -> FIG (after MCMC and ELEVATION)
 
 Monitor:
   squeue -u \$USER
   tail -f logs/ocr_fasc_${OCR}_*.out
   tail -f logs/recover_lost_${REC}.out
   tail -f logs/qwen_expand_${QWEN}.out
-  tail -f logs/gbif_expand_${GBIF}.out
-  tail -f logs/mcmc_expand_${MCMC}.out
+  tail -f logs/gbif_${GBIF}.out
+  tail -f logs/mcmcglmm_${MCMC}.out
 
-Outputs (all under Processed Data/experiments/expansion/ unless noted):
+Outputs (Processed Data/experiments/expansion/ unless noted):
   fascicle OCR txt:     raw_data/fascicles/F{N}_{slug}.txt
   recovered texts:      ../recovered_treatments.csv (parent experiments/)
   new descriptions:     new_descriptions_for_extract.csv
@@ -87,9 +92,8 @@ Outputs (all under Processed Data/experiments/expansion/ unless noted):
   combined occ:         gbif_outputs/gbif_occurrences_combined.csv
   env+PCA final:        step05b_outputs/species_color_environment_final_expanded.csv
   MCMCglmm:             step06_outputs/
-  figures:              figures/
-
-NOT started: label-variant array (run_19), elevation re-run, primary pipeline overwrite.
+  elevation:            step08_outputs/
+  figures:              figures/ and Results/figures/
 EOF
 
 echo ""

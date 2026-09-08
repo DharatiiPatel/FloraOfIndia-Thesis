@@ -1,4 +1,5 @@
 #!/usr/bin/env Rscript
+# MCMCglmm on the primary analysis set (n=1,438).
 
 .libPaths(c("~/R/library", .libPaths()))
 options(stringsAsFactors = FALSE)
@@ -13,8 +14,8 @@ for (pkg in required_packages) {
 }
 
 base_dir   <- "/scratch/dp23301/Thesis"
-input_file <- file.path(base_dir, "Processed Data/experiments/step05b_outputs_clean/species_color_environment_final_clean.csv")
-output_dir  <- file.path(base_dir, "Processed Data/step06_outputs_clean")
+input_file <- file.path(base_dir, "Processed Data/experiments/expansion/step05b_outputs/species_color_environment_final_expanded.csv")
+output_dir  <- file.path(base_dir, "Processed Data/experiments/expansion/step06_outputs")
 fig_dir     <- file.path(output_dir, "figures")
 dir_tables  <- file.path(output_dir, "tables")
 dir_models  <- file.path(output_dir, "models")
