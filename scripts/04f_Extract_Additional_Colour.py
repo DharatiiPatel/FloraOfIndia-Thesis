@@ -2,7 +2,7 @@
 """
 Colour extraction for ALL new expansion texts (recovered + fascicle).
 
-Same prompt/model as 02 / 32. I/O under expansion/ only.
+Same prompt/model as 02. I/O under expansion/ only.
 
   READS  : Processed Data/experiments/expansion/new_descriptions_for_extract.csv
   WRITES : Processed Data/experiments/expansion/flower_color_new.csv

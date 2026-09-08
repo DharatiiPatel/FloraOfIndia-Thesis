@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 # Full ecology figure set for the primary analysis set (n=1,438).
 # Writes under Processed Data/experiments/expansion/figures/ (internal path;
-# that directory is the primary analysis output) and publishes symlinks into
+# that directory is the primary analysis output) and copies files into
 # Results/figures/.
 
 .libPaths(c("/scratch/dp23301/Thesis/R_library", "~/R/library", .libPaths()))

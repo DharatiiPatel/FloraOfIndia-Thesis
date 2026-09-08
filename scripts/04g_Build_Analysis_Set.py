@@ -11,8 +11,8 @@ Steps:
   2. After colours exist: categorise, identify NEW colour-bearing binomials
      not already in the primary analysis table, write GBIF input for those only
 
-  READS  : recovered_descriptions_for_extract.csv (from 31)
-           expansion/fascicle_descriptions.csv (from 33)
+  READS  : recovered_descriptions_for_extract.csv (from 04c)
+           expansion/fascicle_descriptions.csv (from 04e)
            expansion/flower_color_new.csv (from GPU extract, when present)
            step05b_outputs_clean/species_color_environment_final_clean.csv
   WRITES : expansion/new_descriptions_for_extract.csv
