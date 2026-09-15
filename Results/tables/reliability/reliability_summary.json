@@ -1,0 +1,32 @@
+{
+  "primary_ecology_n": 1438,
+  "three_llm_coverage_n": 1313,
+  "missing_72b_or_llama_n": 125,
+  "note_missing": "Fascicle/recovery species have Qwen-7B only. Three-LLM reliability is defined on the coverage subset, not the full n=1438.",
+  "common_known_support_n": 1149,
+  "high_confidence_n": 1129,
+  "disagreement_n": 20,
+  "primary_label": "Qwen-7B categoriser v2",
+  "consensus_models": [
+    "qwen7b",
+    "qwen72b",
+    "llama70b"
+  ],
+  "baseline_not_in_consensus": true,
+  "unknown_never_coded_as_negative": true,
+  "common_known_colour_counts": {
+    "YELLOW": 436,
+    "WHITE": 394,
+    "REDTYPE": 319
+  },
+  "high_confidence_colour_counts": {
+    "YELLOW": 429,
+    "WHITE": 389,
+    "REDTYPE": 311
+  },
+  "agreement_rate_on_coverage_known": 0.9733,
+  "unsupported_known_colour_n": 26,
+  "wrong_context_n": 11,
+  "high_confidence_and_supported_n": 1105,
+  "agreement_rate_on_common_known": 0.9826
+}

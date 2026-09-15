@@ -1,11 +1,20 @@
-# Flora of India — Flower Colour Thesis
+# Reliability-Aware Flower-Colour Extraction from the Flora of India
 
 MS Computer Science thesis (Dharati Patel, University of Georgia).
-Open-source language models extract flower colour from the *Flora of India*;
-those labels are evaluated against a human gold set and linked to GBIF /
-WorldClim / SoilGrids for Bayesian colour–environment models.
 
-Scripts are numbered `01a`–`23` in run order. See `scripts/README.md`.
+**Contribution:** which open-LLM flower-colour labels are reliable enough for
+downstream ecological inference — not “we used LLMs to extract colour.”
+
+Protocol: three open extractors (Qwen-7B, Qwen-72B, Llama-3.3-70B) on a **fixed**
+environment-linked species list; high confidence = they agree on a known class;
+a cheap source-text check flags unsupported or wrong-context colour; ecology
+models are re-run on the common known-label support vs the high-confidence
+subset. The keyword baseline is a benchmark only. UNKNOWN is never coded as
+“not white / not yellow / not redtype.” Models are genus-adjusted, not
+phylogenetically corrected.
+
+Scripts are numbered `01a`–`26`. See `scripts/README.md`.
+Reliability chapter: `24`–`26`.
 
 ## Layout
 
@@ -14,10 +23,12 @@ Thesis/
 ├── Results/                 figures and tables for the thesis
 │   ├── figures/ecology/     fig1–fig6
 │   ├── figures/methods/     fig7–fig14
+│   ├── figures/reliability/ fig15–fig17
 │   ├── figures/supplementary/
 │   └── tables/              mcmc/, elevation/, descriptive/
 ├── docs/
-│   └── VERIFIED_Numbers_for_Thesis.md
+│   ├── VERIFIED_Numbers_for_Thesis.md
+│   └── Reliability_Protocol.md
 ├── scripts/                 01a–23, then lib/ and slurm/
 ├── Processed Data/          pipeline outputs (gitignored)
 └── raw_data/                Flora of India PDFs (gitignored)
@@ -50,4 +61,8 @@ python -m venv .venv_figs && .venv_figs/bin/pip install matplotlib numpy pandas 
 .venv_figs/bin/python scripts/23_Build_Prediction_Figure.py
 ```
 
-GPU and MCMC jobs: `sbatch` from `scripts/slurm/` at the thesis root.
+python scripts/24_Build_Reliability_Set.py
+.venv_figs/bin/python scripts/26_Build_Reliability_Figures.py
+# Ecology robustness (cluster; RELIABILITY_FULL=1 matches step 06 chain length;
+# runs 25 then rebuilds the figures):
+#   sbatch scripts/slurm/run_25_reliability_ecology.slurm

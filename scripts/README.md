@@ -12,6 +12,7 @@ Numbered in run order.
 07                ecology figures
 08                elevation
 09  … 23          gold set, model comparison, RAG, prediction
-lib/              shared figure style + fascicle list
+24  25  26        reliability: agreement + validator, ecology robustness, figures
+lib/              shared figure style, validator, fascicle list
 slurm/            cluster jobs
 ```

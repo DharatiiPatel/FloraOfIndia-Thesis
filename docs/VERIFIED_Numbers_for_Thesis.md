@@ -247,6 +247,55 @@ with genus controlled, WHITE declines and REDTYPE increases with elevation.
 
 ---
 
+## 8c. Reliability chapter (three-model agreement — full chain, corrected set)
+
+Source: `Processed Data/experiments/reliability/summary.json`,
+`reliability_robustness_table.csv` (also mirrored under `Results/tables/reliability/`).
+Built by `scripts/24_Build_Reliability_Set.py` (join + categoriser v2 + validator)
+and `scripts/25_Reliability_Ecology.R` at `nitt=1,050,000` (matches step 06).
+
+**These are v2-recode labels on the three-model overlap. They are NOT the published
+n=1,438 pipeline ecology table (§1) — do not merge the two.**
+
+Predeclared ecology label = **Qwen-7B v2**; 72B and Llama vote only for
+coverage/agreement; keyword baseline is excluded from consensus; UNKNOWN/OTHER are
+dropped, never coded as `is_white=0`.
+
+| Set | n |
+|---|---:|
+| Primary ecology | 1,438 |
+| Three-LLM coverage (72B + Llama present) | 1,313 |
+| Common known support (all 3 give WHITE/YELLOW/REDTYPE) | **1,149** |
+| High confidence (all 3 agree on class) | **1,129** |
+| Disagreement (descriptive only) | **20** |
+
+Agreement rate on common-known **0.9826**; on coverage-where-7B-known **0.9733**.
+Validator flags: unsupported known colour **26**, wrong-context **11**,
+high-confidence-and-supported **1,105**.
+Colour counts — common: YELLOW 436 / WHITE 394 / REDTYPE 319; high-conf: 429 / 389 / 311.
+
+### Full-chain robustness (both subsets, genus RE, threshold MCMCglmm)
+
+| Effect | Common-known (n=1,149) | High-confidence (n=1,129) | Verdict |
+|---|---|---|---|
+| WHITE ~ PC2 | +0.067, p=0.003, CI excl. 0 | +0.071, p=0.002, CI excl. 0 | **robust** |
+| YELLOW ~ PC2 | −0.080, p=0.002, CI excl. 0 | −0.080, p=0.001, CI excl. 0 | **robust** |
+| REDTYPE ~ PC3 | −0.019, p=0.60 | −0.019, p=0.60 | same direction, CI incl. 0 |
+| WHITE ~ elevation | −0.034, p=0.61 | −0.036, p=0.58 | same direction, CI incl. 0 |
+| YELLOW ~ elevation | +0.044, p=0.56 | +0.047, p=0.54 | same direction, CI incl. 0 |
+| REDTYPE ~ elevation | +0.007, p=0.92 | +0.011, p=0.87 | same direction, CI incl. 0 |
+
+**Correct claim:** WHITE~PC2 (+) and YELLOW~PC2 (−) survive restriction to species
+where all three open models agree on a known colour plus a source-text check — i.e.
+**robust to disagreement among these three models**, not to all extraction error
+(shared OCR/prompt bias can still agree). Elevation and REDTYPE~PC3 do not exclude
+zero on these subsets.
+
+**No second-annotator / human IAA study was performed.** Reliability is assessed by
+model agreement + lexical source grounding only; the n=98 gold set stays exploratory.
+
+---
+
 ## 9. Safe citation checklist
 
 1. Always state **n=98** for gold metrics (2 rows unlabelled).  
