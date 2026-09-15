@@ -14,8 +14,18 @@ for (pkg in required_packages) {
 }
 
 base_dir   <- "/scratch/dp23301/Thesis"
-input_file <- file.path(base_dir, "Processed Data/experiments/expansion/step05b_outputs/species_color_environment_final_expanded.csv")
-output_dir  <- file.path(base_dir, "Processed Data/experiments/expansion/step06_outputs")
+
+# ECOLOGY_SET=clean reruns the historical n=1,174 set for the §1b comparison
+# table. Default (unset / "primary") is the published n=1,438 analysis.
+eco_set <- Sys.getenv("ECOLOGY_SET", "primary")
+if (identical(eco_set, "clean")) {
+  input_file <- file.path(base_dir, "Processed Data/experiments/step05b_outputs_clean/species_color_environment_final_clean.csv")
+  output_dir <- file.path(base_dir, "Processed Data/experiments/step06_outputs_clean")
+} else {
+  input_file <- file.path(base_dir, "Processed Data/experiments/expansion/step05b_outputs/species_color_environment_final_expanded.csv")
+  output_dir <- file.path(base_dir, "Processed Data/experiments/expansion/step06_outputs")
+}
+message("ECOLOGY_SET = ", eco_set)
 fig_dir     <- file.path(output_dir, "figures")
 dir_tables  <- file.path(output_dir, "tables")
 dir_models  <- file.path(output_dir, "models")
@@ -35,6 +45,13 @@ NITT    <- 1050000   # total iterations
 BURNIN  <- 50000     # burn-in
 THIN    <- 100       # thinning interval
 # Effective samples = (1050000 - 50000) / 100 = 10000
+
+# MCMC_SMOKE=1 runs absurdly short chains to test the I/O path only. Never use
+# it for reported results; published numbers use the values above.
+if (identical(Sys.getenv("MCMC_SMOKE", ""), "1")) {
+  NITT <- 1300; BURNIN <- 300; THIN <- 10
+  message("*** MCMC_SMOKE=1: short chains, results are NOT publishable ***")
+}
 
 PRIOR <- list(
   R = list(V = 1, fix = 1), #prior for the residual variance. in binary threshold models rv is not identifiable from data so we fixed it to 1.

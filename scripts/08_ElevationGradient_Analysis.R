@@ -23,10 +23,24 @@ library(scales)
 base_dir <- "/scratch/dp23301/Thesis"
 source(file.path(base_dir, "scripts/lib/figure_style.R"))
 
-exp_root    <- file.path(base_dir, "Processed Data/experiments/expansion")
-input_pca   <- file.path(exp_root, "step05b_outputs/species_color_environment_final_expanded.csv")
-input_env   <- file.path(exp_root, "step05b_outputs/species_environment_trimmed.csv")
-output_dir  <- file.path(exp_root, "step08_outputs")
+# ECOLOGY_SET=clean reruns the historical n=1,174 set for the §1b comparison
+# table. It must NOT publish into Results/, which holds the primary n=1,438
+# figures. Default (unset / "primary") is the published analysis.
+eco_set <- Sys.getenv("ECOLOGY_SET", "primary")
+publish_results <- !identical(eco_set, "clean")
+message("ECOLOGY_SET = ", eco_set, "  (publish to Results: ", publish_results, ")")
+
+if (identical(eco_set, "clean")) {
+  clean_root <- file.path(base_dir, "Processed Data/experiments")
+  input_pca  <- file.path(clean_root, "step05b_outputs_clean/species_color_environment_final_clean.csv")
+  input_env  <- file.path(clean_root, "step05b_outputs_clean/species_environment_trimmed.csv")
+  output_dir <- file.path(clean_root, "step08_outputs_clean")
+} else {
+  exp_root    <- file.path(base_dir, "Processed Data/experiments/expansion")
+  input_pca   <- file.path(exp_root, "step05b_outputs/species_color_environment_final_expanded.csv")
+  input_env   <- file.path(exp_root, "step05b_outputs/species_environment_trimmed.csv")
+  output_dir  <- file.path(exp_root, "step08_outputs")
+}
 fig_dir     <- file.path(output_dir, "figures")
 
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
@@ -64,7 +78,7 @@ theme_paper <- theme_minimal(base_size = 12) +
     panel.grid.minor = element_blank()
   )
 
-message("Loading primary-set elevation data...")
+message("Loading elevation data (", eco_set, " set)...")
 
 df <- read.csv(input_pca, encoding = "UTF-8")
 env <- read.csv(input_env, encoding = "UTF-8") %>%
@@ -289,9 +303,11 @@ p_pc2 <- ggplot(df, aes(x = elev_band, y = PC2, fill = elev_band)) +
 save_fig(file.path(fig_dir, "fig6_elevation_pc2_boxplot.png"), p_pc2, 10, 5)
 
 summary_lines <- c(
-  "Elevation Gradient Analysis — Primary Analysis Summary",
+  paste0("Elevation Gradient Analysis — ", eco_set, " set summary"),
   strrep("=", 50),
   paste("Date:", Sys.time()),
+  paste("ECOLOGY_SET:", eco_set),
+  paste("Input:", input_pca),
   paste("Species analysed:", nrow(df)),
   paste("Elevation range (m):", round(min(df$alt)), "-", round(max(df$alt))),
   paste("SKIP_ELEV_MCMC:", skip_mcmc),
@@ -299,27 +315,31 @@ summary_lines <- c(
   "Chi-square (colour x band):",
   capture.output(print(chi_test)),
   "",
-  "Outputs under Processed Data/experiments/expansion/step08_outputs/",
-  "(internal path name retained; this is the primary analysis set, n=1,438)"
+  paste("Outputs under:", output_dir)
 )
 writeLines(summary_lines, file.path(output_dir, "elevation_analysis_summary.txt"))
 
-# Publish elevation figures into Results if present
-res_elev <- file.path(base_dir, "Results/figures/ecology")
-dir.create(res_elev, recursive = TRUE, showWarnings = FALSE)
-for (f in list.files(fig_dir, pattern = "\\.png$")) {
-  dst <- file.path(res_elev, f)
-  if (file.exists(dst) || !is.na(Sys.readlink(dst))) try(unlink(dst), silent = TRUE)
-  file.copy(file.path(fig_dir, f), dst, overwrite = TRUE)
-}
-for (t in c("elevation_band_summary.csv", "elevation_mcmc_results.csv",
-            "pc2_by_elevation_band.csv", "elevation_analysis_summary.txt")) {
-  src <- file.path(output_dir, t)
-  if (!file.exists(src)) next
-  dst <- file.path(base_dir, "Results/tables/elevation", t)
-  dir.create(dirname(dst), recursive = TRUE, showWarnings = FALSE)
-  if (file.exists(dst) || !is.na(Sys.readlink(dst))) try(unlink(dst), silent = TRUE)
-  file.copy(src, dst, overwrite = TRUE)
+# Publish elevation figures into Results — primary set only, so a clean-set
+# rerun never overwrites the published n=1,438 figures.
+if (publish_results) {
+  res_elev <- file.path(base_dir, "Results/figures/ecology")
+  dir.create(res_elev, recursive = TRUE, showWarnings = FALSE)
+  for (f in list.files(fig_dir, pattern = "\\.png$")) {
+    dst <- file.path(res_elev, f)
+    if (file.exists(dst) || !is.na(Sys.readlink(dst))) try(unlink(dst), silent = TRUE)
+    file.copy(file.path(fig_dir, f), dst, overwrite = TRUE)
+  }
+  for (t in c("elevation_band_summary.csv", "elevation_mcmc_results.csv",
+              "pc2_by_elevation_band.csv", "elevation_analysis_summary.txt")) {
+    src <- file.path(output_dir, t)
+    if (!file.exists(src)) next
+    dst <- file.path(base_dir, "Results/tables/elevation", t)
+    dir.create(dirname(dst), recursive = TRUE, showWarnings = FALSE)
+    if (file.exists(dst) || !is.na(Sys.readlink(dst))) try(unlink(dst), silent = TRUE)
+    file.copy(src, dst, overwrite = TRUE)
+  }
+} else {
+  message("Skipping Results/ publication (ECOLOGY_SET=clean).")
 }
 
 message("\nPrimary elevation Step 08 complete")
