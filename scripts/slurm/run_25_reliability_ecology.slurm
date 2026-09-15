@@ -14,8 +14,11 @@ set -euo pipefail
 cd /scratch/dp23301/Thesis
 mkdir -p logs
 module load R/4.5.1-gfbf-2025a
-# Match scripts/06_MCMCglmm.R chain length
+# Match scripts/06_MCMCglmm.R chain length. Runs 3 independent chains per model
+# (~9 h total); inference pools them and Gelman-Rubin MPSRF is written to
+# reliability_convergence.csv.
 export RELIABILITY_FULL=1
+unset MCMC_SMOKE || true
 Rscript scripts/25_Reliability_Ecology.R
 # figures need matplotlib; base Python module lacks it, use the repo venv
 .venv_figs/bin/python scripts/26_Build_Reliability_Figures.py
