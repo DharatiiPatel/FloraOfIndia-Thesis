@@ -19,6 +19,7 @@ WRITES: Processed Data/experiments/figures/fig14_prediction.{png,pdf}
 
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 
@@ -88,7 +89,8 @@ def panel_a(ax, df):
     ax.set_yticks(ys)
     ax.set_yticklabels([MODEL_LABELS[m] for m in ORDER], fontsize=8.5)
     ax.set_xlabel("Macro-F₁ (5-fold, genus-grouped CV)", fontsize=9)
-    ax.set_xlim(0.15, 0.42)
+    # data-driven so the value labels never fall outside the axes
+    ax.set_xlim(d.macro_f1_lo.min() - 0.05, d.macro_f1_hi.max() + 0.07)
     ax.set_ylim(-0.7, len(ORDER) - 0.3)
     ax.set_title("A  Environment barely beats the floor",
                  loc="left", fontsize=9.5, color=INK, fontweight="bold")
@@ -97,8 +99,8 @@ def panel_a(ax, df):
     style_axis(ax)
 
 
-def panel_b(ax, df):
-    show = ["genus_prior", "random_forest"]
+def panel_b(ax, df, best_env):
+    show = ["genus_prior", best_env]
     piv = df.pivot_table(index="model", columns="cv", values="macro_f1")
     ys = np.arange(len(show))[::-1]
     for y, m in zip(ys, show):
@@ -116,10 +118,12 @@ def panel_b(ax, df):
                 fontsize=8.5, color=INK)
 
     ax.set_yticks(ys)
-    ax.set_yticklabels(["Genus prior", "Random forest\n(environment)"],
+    env_label = MODEL_LABELS[best_env].split(" (")[0]
+    ax.set_yticklabels(["Genus prior", f"{env_label}\n(environment)"],
                        fontsize=8.5)
     ax.set_xlabel("Macro-F₁", fontsize=9)
-    ax.set_xlim(0.10, 0.80)
+    vals = piv.loc[show, [GROUPED, UNGROUPED]].to_numpy(dtype=float)
+    ax.set_xlim(vals.min() - 0.10, vals.max() + 0.12)
     # headroom above the top row so the legend never sits on the data
     ax.set_ylim(-0.65, len(show) + 0.35)
     ax.set_title("B  Relatedness carries the signal",
@@ -160,26 +164,41 @@ def panel_c(ax, pi):
 def main():
     df = pd.read_csv(PRED / "prediction_cv_summary.csv")
     pi = pd.read_csv(PRED / "prediction_permutation_importance.csv")
+    meta = json.loads((PRED / "prediction_run_metadata.json").read_text())
+    best_env = meta["best_env_model_grouped"]
+
+    # every number in the title/caption comes from the run, never hardcoded
+    grouped = df[df.cv == GROUPED].set_index("model")
+    floor_f1 = grouped.loc["majority", "macro_f1"]
+    env_f1 = grouped.loc[best_env, "macro_f1"]
+    env_balacc = grouped.loc[best_env, "balanced_accuracy"]
+    chance_balacc = grouped.loc["majority", "balanced_accuracy"]
+    genus_f1 = df[(df.cv == UNGROUPED) & (df.model == "genus_prior")].macro_f1.iat[0]
+    # how much further above the majority floor relatedness gets us
+    ratio = (genus_f1 - floor_f1) / (env_f1 - floor_f1)
+    top_axis = pi.sort_values("importance_mean", ascending=False).variable.iat[0]
 
     fig = plt.figure(figsize=(13.4, 4.8))
     gs = fig.add_gridspec(1, 3, width_ratios=[1.15, 1.0, 0.8],
                           wspace=0.62, left=0.145, right=0.985,
                           top=0.78, bottom=0.27)
     panel_a(fig.add_subplot(gs[0, 0]), df)
-    panel_b(fig.add_subplot(gs[0, 1]), df)
+    panel_b(fig.add_subplot(gs[0, 1]), df, best_env)
     panel_c(fig.add_subplot(gs[0, 2]), pi)
 
     fig.suptitle(
-        "Predicting flower colour from environment (n = 1,174 species, 338 genera)",
+        "Predicting flower colour from environment "
+        f"(n = {meta['n_species']:,} species, {meta['n_genera']} genera)",
         x=0.008, ha="left", fontsize=11.5, fontweight="bold", color=INK, y=0.97,
     )
     fig.text(
         0.008, 0.035,
         "Colour–environment associations are statistically robust but weakly "
-        "predictive: the best environment model reaches balanced accuracy 0.342 "
-        "against a 0.333 chance floor.\nKnowing a species' genus predicts colour "
-        "roughly three times better than its entire climate and soil niche, and "
-        "PC2 is the only informative axis — independently reproducing the "
+        f"predictive: the best environment model reaches balanced accuracy "
+        f"{env_balacc:.3f} against a {chance_balacc:.3f} chance floor.\n"
+        f"Knowing a species' genus lifts macro-F₁ {ratio:.1f}× further above the "
+        "majority floor than its entire climate and soil niche, and "
+        f"{top_axis} is the only informative axis — independently reproducing the "
         "MCMCglmm result.",
         ha="left", va="bottom", fontsize=8.2, color=MUTED,
     )

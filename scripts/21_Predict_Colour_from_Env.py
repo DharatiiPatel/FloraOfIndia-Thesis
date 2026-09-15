@@ -26,7 +26,7 @@ Two baselines matter:
                       informative under the ungrouped split, where it measures
                       how much of the apparent signal is just phylogeny.
 
-READS : Processed Data/experiments/step05b_outputs_clean/species_color_environment_final_clean.csv
+READS : Processed Data/experiments/expansion/step05b_outputs/species_color_environment_final_expanded.csv
 WRITES: Processed Data/experiments/prediction_outputs/
 """
 
@@ -54,8 +54,10 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 BASE = Path("/scratch/dp23301/Thesis")
-ENV = (BASE / "Processed Data/experiments/step05b_outputs_clean"
-       / "species_color_environment_final_clean.csv")
+# Primary published analysis set (n=1,438). The earlier clean set under
+# step05b_outputs_clean (n=1,174) is historical and no longer used here.
+ENV = (BASE / "Processed Data/experiments/expansion/step05b_outputs"
+       / "species_color_environment_final_expanded.csv")
 OUT = BASE / "Processed Data/experiments/prediction_outputs"
 
 PCS = [f"PC{i}" for i in range(1, 11)]

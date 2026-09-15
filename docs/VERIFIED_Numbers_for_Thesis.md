@@ -205,19 +205,33 @@ species text while abstaining on rows that carry no colour information.*
 
 ## 7c. Prediction task (colour ~ environment)
 
-Source: `prediction_outputs/prediction_cv_summary.csv`. n=1,174 species, 338 genera, 5-fold CV
-(earlier clean set; prediction figures not yet refreshed on n=1,438).
+Source: `prediction_outputs/prediction_cv_summary.csv`. **Refreshed on the primary
+n=1,438 set** (417 genera; WHITE/YELLOW/REDTYPE = 613/494/331), 5-fold CV.
+Figure: `Results/figures/methods/fig14_prediction.{png,pdf}` — all title/caption
+numbers are generated from the run, not hardcoded.
+
+Genus-grouped CV (headline; a genus never spans a split):
 
 | Model | Accuracy | Balanced acc. | Macro-F1 [95% CI] |
 |---|---:|---:|---|
-| Majority class | 0.4276 | 0.3333 | 0.200 [0.190, 0.209] |
-| Logistic regression | 0.4250 | 0.3460 | 0.300 [0.279, 0.320] |
-| Random forest | 0.4012 | 0.3424 | 0.326 [0.300, 0.351] |
-| Genus prior, **ungrouped** CV | 0.6210 | 0.5997 | 0.605 [0.575, 0.634] |
+| Majority class | 0.4263 | 0.3333 | 0.1993 [0.191, 0.208] |
+| Logistic regression | 0.4325 | 0.3595 | 0.3135 [0.292, 0.335] |
+| **Random forest** (best env. model) | 0.4131 | 0.3628 | 0.3500 [0.325, 0.375] |
+| Genus prior | 0.4263 | 0.3333 | 0.1993 [0.191, 0.208] |
+| Genus prior, **ungrouped** CV | 0.6161 | 0.6015 | 0.6077 [0.580, 0.633] |
 
-**Claims:** environment is statistically associated with colour but **weakly predictive**
-(balanced accuracy 0.342 vs 0.333 chance). **Genus predicts ~3× better than environment.**
-Permutation importance: PC2 = 0.0236, next axis PC4 = 0.0028 — PC2 independently reproduces the MCMCglmm result.
+Under grouped CV every test genus is unseen, so the genus prior necessarily
+collapses to the majority class — that is expected, not a bug.
+
+**Claims:** environment is statistically associated with colour but **weakly
+predictive** (balanced accuracy **0.363 vs 0.333** chance). Relatedness lifts
+macro-F1 **2.7× further above the majority floor** than the entire climate+soil
+niche (genus prior ungrouped 0.608 vs random forest 0.350, floor 0.199).
+Permutation importance: **PC2 = +0.0193 is the only axis with positive
+importance** (next, PC8, is −0.0015) — PC2 independently reproduces the MCMCglmm result.
+
+*Historical (earlier clean n=1,174 set): majority 0.200, logreg 0.300, RF 0.326,
+genus prior ungrouped 0.605; balanced accuracy 0.342 vs 0.333. Conclusions unchanged.*
 
 ---
 
