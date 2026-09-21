@@ -20,5 +20,7 @@ module load R/4.5.1-gfbf-2025a
 export RELIABILITY_FULL=1
 unset MCMC_SMOKE || true
 Rscript scripts/25_Reliability_Ecology.R
+# export thinned chain draws so the convergence panel (fig18) can be built
+Rscript scripts/28_Export_Reliability_Draws.R
 # figures need matplotlib; base Python module lacks it, use the repo venv
 .venv_figs/bin/python scripts/26_Build_Reliability_Figures.py

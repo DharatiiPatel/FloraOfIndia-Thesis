@@ -91,6 +91,7 @@ FIGURES = [
     "methods/fig12_rq4_forest.png", "methods/fig13_rq4_concordance.png",
     "methods/fig14_prediction.png", "reliability/fig15_reliability_pipeline.png",
     "reliability/fig16_agreement_counts.png", "reliability/fig17_reliability_forest.png",
+    "reliability/fig18_reliability_convergence.png",
     "supplementary/coefficient_plot_PC1_PC3.png", "supplementary/fig2_supp_PC6_10.png",
     "supplementary/figS_traceplots.png",
 ]

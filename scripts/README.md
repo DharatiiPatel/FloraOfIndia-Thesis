@@ -13,6 +13,8 @@ Numbered in run order.
 08                elevation
 09  … 23          gold set, model comparison, RAG, prediction
 24  25  26        reliability: agreement + validator, ecology robustness, figures
+27                regression audit: recompute every cited number
+28                export reliability chain draws (for the fig18 convergence panel)
 lib/              shared figure style, validator, fascicle list
 slurm/            cluster jobs
 ```

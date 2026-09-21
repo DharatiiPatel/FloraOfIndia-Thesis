@@ -320,8 +320,10 @@ Pooled posterior over 3 chains. Full precision in `reliability_mcmc_effects.csv`
 
 ### Convergence (added 2026-09-21)
 
-Source: `reliability_convergence.csv` (mirrored under `Results/tables/reliability/`);
-per-model trace plots in `experiments/reliability/figures/trace_*.png`.
+Source: `reliability_convergence.csv` (mirrored under `Results/tables/reliability/`).
+Appendix figure: **fig18_reliability_convergence** (all 12 models, 3 chains each, with
+MPSRF and ESS per panel); per-model trace plots also in
+`experiments/reliability/figures/trace_*.png`.
 
 | Diagnostic | Value |
 |---|---|

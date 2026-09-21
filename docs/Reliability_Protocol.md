@@ -23,8 +23,7 @@ inference?
   `sbatch scripts/slurm/run_25_reliability_ecology.slurm` (`RELIABILITY_FULL=1`).
 - **3 independent chains** per model (seeds 42/123/456); inference uses the pooled
   30,000 samples and convergence is reported as Gelman-Rubin MPSRF in
-  `reliability_convergence.csv`, with trace plots in
-  `experiments/reliability/figures/`.
+  `reliability_convergence.csv`, plotted as **fig18_reliability_convergence**.
 
 Observed (v2 labels, three-LLM overlap; not the published n=1,438 pipeline table):
 

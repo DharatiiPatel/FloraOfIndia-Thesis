@@ -13,8 +13,8 @@ subset. The keyword baseline is a benchmark only. UNKNOWN is never coded as
 “not white / not yellow / not redtype.” Models are genus-adjusted, not
 phylogenetically corrected.
 
-Scripts are numbered `01a`–`26`. See `scripts/README.md`.
-Reliability chapter: `24`–`26`.
+Scripts are numbered `01a`–`28`. See `scripts/README.md`.
+Reliability chapter: `24`–`26`, `28`. Regression audit of every cited number: `27`.
 
 ## Layout
 
@@ -23,13 +23,13 @@ Thesis/
 ├── Results/                 figures and tables for the thesis
 │   ├── figures/ecology/     fig1–fig6
 │   ├── figures/methods/     fig7–fig14
-│   ├── figures/reliability/ fig15–fig17
+│   ├── figures/reliability/ fig15–fig18
 │   ├── figures/supplementary/
 │   └── tables/              mcmc/, elevation/, descriptive/
 ├── docs/
 │   ├── VERIFIED_Numbers_for_Thesis.md
 │   └── Reliability_Protocol.md
-├── scripts/                 01a–23, then lib/ and slurm/
+├── scripts/                 01a–28, then lib/ and slurm/
 ├── Processed Data/          pipeline outputs (gitignored)
 └── raw_data/                Flora of India PDFs (gitignored)
 ```

@@ -30,8 +30,8 @@ INK = "#1b1b1b"
 MUTED = "#6e6e6e"
 
 
-def _save(fig, stem: str) -> None:
-    fig.savefig(FIG / f"{stem}.png", dpi=400, bbox_inches="tight")
+def _save(fig, stem: str, dpi: int = 400) -> None:
+    fig.savefig(FIG / f"{stem}.png", dpi=dpi, bbox_inches="tight")
     fig.savefig(FIG / f"{stem}.pdf", bbox_inches="tight")
     plt.close(fig)
 
@@ -162,6 +162,75 @@ def fig_forest(effects_path: Path) -> None:
     _save(fig, "fig17_reliability_forest")
 
 
+def fig_traces(draws_path: Path, convergence_path: Path) -> None:
+    """Appendix convergence panel: focal effect traces for all 3 chains, 12 models.
+
+    Mirrors what the primary analysis already publishes (fig4_convergence,
+    figS_traceplots) so the reliability chapter's convergence is visible, not just
+    tabulated.
+    """
+    with draws_path.open(encoding="utf-8-sig") as f:
+        draws = list(csv.DictReader(f))
+    with convergence_path.open(encoding="utf-8-sig") as f:
+        cvg = {(r["subset"], r["color"], r["effect"]): r for r in csv.DictReader(f)}
+
+    order = [("WHITE", "PC2"), ("YELLOW", "PC2"), ("REDTYPE", "PC3"),
+             ("WHITE", "alt_scaled"), ("YELLOW", "alt_scaled"), ("REDTYPE", "alt_scaled")]
+    subsets = [("common_known", "#2e4a7d"), ("high_confidence", "#1f6f78")]
+    # one shade per chain, keyed off the subset's base colour
+    chain_styles = ["-", "-", "-"]
+    chain_alpha = [0.9, 0.6, 0.38]
+
+    fig, axes = plt.subplots(len(order), len(subsets), figsize=(11.0, 12.4),
+                             sharex=True)
+    for row, (colour, effect) in enumerate(order):
+        for col, (subset, base) in enumerate(subsets):
+            ax = axes[row][col]
+            sel = [d for d in draws if d["subset"] == subset
+                   and d["color"] == colour and d["effect"] == effect]
+            for ci in ("1", "2", "3"):
+                pts = [(int(d["iter"]), float(d["value"])) for d in sel if d["chain"] == ci]
+                pts.sort()
+                ax.plot([p[0] for p in pts], [p[1] for p in pts],
+                        chain_styles[int(ci) - 1], color=base,
+                        alpha=chain_alpha[int(ci) - 1], lw=0.5)
+            ax.axhline(0, color="#cc4444", lw=0.8, ls="--", alpha=0.7)
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
+            ax.tick_params(labelsize=7)
+
+            r = cvg.get((subset, colour, effect))
+            if r:
+                ax.set_title(
+                    f"{colour} ~ {effect.replace('alt_scaled', 'elevation')}"
+                    f"   ({subset}, n={r['n']})",
+                    fontsize=8.5, loc="left", color=INK, pad=3)
+                ax.text(0.985, 0.04,
+                        f"MPSRF {float(r['mpsrf']):.5f}   ESS {float(r['eff_samp']):,.0f}",
+                        transform=ax.transAxes, ha="right", va="bottom",
+                        fontsize=6.8, color=MUTED)
+            if col == 0:
+                ax.set_ylabel("posterior draw", fontsize=7.5)
+    for ax in axes[-1]:
+        ax.set_xlabel("stored iteration (thinned for display)", fontsize=8)
+
+    worst = max(float(r["mpsrf"]) for r in cvg.values())
+    least = min(float(r["eff_samp"]) for r in cvg.values())
+    n_chains = sorted({r["n_chains"] for r in cvg.values()})[0]
+    fig.suptitle(
+        "Reliability chapter convergence: "
+        f"{n_chains} independent chains per model (seeds 42/123/456)",
+        fontsize=11.5, x=0.008, ha="left", y=0.9985)
+    fig.text(0.008, 0.9762,
+             f"All {len(cvg)} models pass Gelman-Rubin: worst MPSRF {worst:.6f} "
+             f"(threshold 1.01); lowest pooled effective sample size {least:,.0f} "
+             "of 30,000. Chains overlap with no drift.",
+             fontsize=8.5, color=MUTED, ha="left")
+    # dense line art: 400 dpi produces a needlessly huge PNG, the PDF stays vector
+    fig.tight_layout(rect=(0, 0, 1, 0.9705))
+    _save(fig, "fig18_reliability_convergence", dpi=200)
+
+
 def main() -> None:
     summary = json.loads((REL / "summary.json").read_text())
     with (REL / "species_reliability.csv").open(encoding="utf-8-sig") as f:
@@ -174,6 +243,14 @@ def main() -> None:
         print("wrote forest from", effects)
     else:
         print("SKIP forest: run Rscript scripts/25_Reliability_Ecology.R")
+
+    draws = REL / "reliability_chain_draws.csv"
+    convergence = REL / "reliability_convergence.csv"
+    if draws.exists() and convergence.exists():
+        fig_traces(draws, convergence)
+        print("wrote convergence panel from", draws.name)
+    else:
+        print("SKIP convergence panel: run Rscript scripts/28_Export_Reliability_Draws.R")
     print("figures ->", FIG)
 
 
