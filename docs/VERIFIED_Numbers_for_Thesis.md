@@ -73,6 +73,36 @@ Sources: `step08_outputs_clean/` vs `experiments/expansion/step08_outputs/`.
 
 ---
 
+## 1c. Multiple testing — what survives correction (added 2026-09-21)
+
+Every colour × environment analysis is a *grid* of tests, so raw pMCMC < 0.05 counts
+must be read against the number of tests. Benjamini–Hochberg (BH) q-values below are
+recomputed from the published CSVs by `27_Audit_All_Numbers.py`; nothing here is
+hand-entered.
+
+| Analysis family | Tests | Expected FP @0.05 | Raw sig | Survives BH q<0.05 |
+|---|---:|---:|---:|---|
+| Primary ecology, colour × PC1–PC10 | 30 | 1.5 | 3 | WHITE~PC2 (q=0.006), YELLOW~PC2 (q=0.015) |
+| Primary elevation, colour × `alt_scaled` | 3 | 0.15 | 2 | REDTYPE (q=0.019), WHITE (q=0.034) |
+| RQ4 label-source grid (4 sources) | 120 | 6 | 13 | WHITE~PC2 and YELLOW~PC2, **all four sources** (q≤0.009) |
+| Reliability chapter (pre-specified) | 12 | 0.6 | 4 | all 4 (the WHITE/YELLOW PC2 effects, q≤0.013) |
+
+**What is safe to claim.** WHITE~PC2 (positive) and YELLOW~PC2 (negative) survive
+correction in *every* family, including Bonferroni, and hold under all four label
+sources and both reliability subsets. These are the thesis headlines and they are
+robust on every axis tested.
+
+**What needs a caveat.**
+- **REDTYPE~PC3** (primary, p=0.0162) has **q=0.162** — it does *not* survive
+  correction over the 30-test grid. Report it as suggestive, not established.
+- **The five RQ4 secondary hits** (YELLOW~PC4, WHITE~PC9, REDTYPE~PC7) have
+  **q=0.36–0.46** against ≈6 expected false positives. Do not present them as
+  established label-dependent effects.
+- **Elevation** slopes survive BH but only REDTYPE survives Bonferroni (0.05/3 =
+  0.0167); WHITE~elevation at p=0.0224 is the weaker of the two.
+
+---
+
 ## 2. Gold set
 
 | Quantity | Exact value |
@@ -185,6 +215,17 @@ RAG predictions file: 100 rows (`rq3_outputs/gold_pred_qwen7b_rag.csv`).
 **Correct claim:** label source never flips a headline association, but flips **three of four** secondary ones.
 **Do not write** "the one genuine divergence is YELLOW~PC4" — that undercounts.
 **Caveat:** baseline n=901 vs LLM n≈1,170, so baseline comparisons confound label accuracy with sample composition.
+
+**Multiplicity (verify with `27_Audit_All_Numbers.py`):** the RQ4 grid is 3 colours ×
+10 PCs × 4 label sources = **120 tests**, so ≈**6** hits are expected at pMCMC < 0.05
+by chance alone; **13** are observed. Under Benjamini–Hochberg across all 120, only
+**WHITE~PC2 and YELLOW~PC2 survive** (q ≤ 0.009, and they are significant under
+*every* label source). The five secondary hits above carry **q = 0.36–0.46**.
+**Therefore:** present the secondary effects as *not distinguishable from the expected
+false-positive rate*, not as established label-dependent associations. The honest
+sentence is "only the PC2 associations survive correction for multiple testing; the
+scattered secondary hits are consistent with chance, which is itself the argument for
+reporting label sensitivity rather than a single label source."
 
 ---
 

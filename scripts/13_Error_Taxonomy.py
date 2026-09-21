@@ -173,12 +173,20 @@ def gold_disagreement_table(preds):
     with open(GOLD, encoding="utf-8-sig") as f:
         rows = list(csv.DictReader(f))
     out_rows = []
+    # Coverage differs by model: one gold treatment is a parse artifact whose
+    # species_id is blank, and the baseline pipeline keyed that slot differently,
+    # so it aligns to 97 of the 98 labelled items. Score each model only on the
+    # items it actually covers, exactly as 12_Score_Models_vs_Gold.py does.
+    coverage = {m: 0 for m in preds}
     for r in rows:
         if not (r.get("gold_category") or "").strip():
             continue
         gold_cls = to_class(r["gold_category"])
         sid = r["species_id"]
         for model, pmap in preds.items():
+            if sid not in pmap:
+                continue
+            coverage[model] += 1
             pfree = pmap.get(sid, "")
             pred_cls = to_class(categorize(pfree))
             err = classify_error(r, pfree, gold_cls, pred_cls)
@@ -195,7 +203,7 @@ def gold_disagreement_table(preds):
                 "error_class": err,
                 "notes": (r.get("notes") or "")[:200],
             })
-    return out_rows
+    return out_rows, coverage
 
 
 def corpus_prevalence():
@@ -257,7 +265,7 @@ def corpus_prevalence():
     return n, counts, examples
 
 
-def write_summary(disagree_rows, n_treat, corpus_counts, examples, preds):
+def write_summary(disagree_rows, coverage, n_treat, corpus_counts, examples, preds):
     # per-model error class counts
     by_model = {}
     for model in PRED_FILES:
@@ -270,14 +278,15 @@ def write_summary(disagree_rows, n_treat, corpus_counts, examples, preds):
 
     lines = []
     lines.append("# RQ2 — Error Taxonomy Summary\n")
-    lines.append("## 1. Gold-set disagreements (vs human labels, n=98 labelled)\n")
-    lines.append("| Model | # disagreements | Accuracy |")
-    lines.append("|---|---:|---:|")
-    # accuracy from earlier scoring
-    acc = {"baseline": 0.763, "qwen7b": 0.878, "qwen72b": 0.878, "llama70b": 0.857}
+    n_labelled = max(coverage.values())
+    lines.append(f"## 1. Gold-set disagreements (vs human labels, "
+                 f"n={n_labelled} labelled)\n")
+    lines.append("| Model | items scored | # disagreements | Accuracy |")
+    lines.append("|---|---:|---:|---:|")
     for m in PRED_FILES:
         n_wrong = sum(1 for r in disagree_rows if r["model"] == m)
-        lines.append(f"| {m} | {n_wrong} | {acc.get(m, float('nan')):.3f} |")
+        n_cov = coverage[m]
+        lines.append(f"| {m} | {n_cov} | {n_wrong} | {1 - n_wrong / n_cov:.3f} |")
 
     lines.append("\n## 2. Qwen-7B error-class breakdown (primary model)\n")
     lines.append("| Error class | Count | Meaning |")
@@ -295,7 +304,8 @@ def write_summary(disagree_rows, n_treat, corpus_counts, examples, preds):
     }
     for cls, n in q7c.most_common():
         lines.append(f"| {cls} | {n} | {meanings.get(cls, '')} |")
-    lines.append(f"\n**Total Qwen-7B disagreements:** {sum(q7c.values())} / 98\n")
+    lines.append(f"\n**Total Qwen-7B disagreements:** {sum(q7c.values())} / "
+                 f"{coverage['qwen7b']}\n")
 
     # how many are "real LLM errors" vs pipeline/data
     real_llm = {"FALSE_POSITIVE", "FALSE_NEGATIVE", "FRUIT_BERRY_COLOR", "OTHER_MISMATCH", "INDUMENT_TEXTURE"}
@@ -344,7 +354,7 @@ def write_summary(disagree_rows, n_treat, corpus_counts, examples, preds):
 def main():
     OUTDIR.mkdir(parents=True, exist_ok=True)
     preds = load_preds()
-    disagree = gold_disagreement_table(preds)
+    disagree, coverage = gold_disagreement_table(preds)
 
     disagree_path = OUTDIR / "gold_disagreements_by_error_class.csv"
     with open(disagree_path, "w", newline="", encoding="utf-8") as f:
@@ -366,7 +376,7 @@ def main():
             })
     print(f"Wrote prevalence -> {prev_path}")
 
-    summary = write_summary(disagree, n_treat, corpus_counts, examples, preds)
+    summary = write_summary(disagree, coverage, n_treat, corpus_counts, examples, preds)
     sum_path = OUTDIR / "RQ2_Error_Taxonomy_Summary.md"
     sum_path.write_text(summary, encoding="utf-8")
     print(f"Wrote summary -> {sum_path}")

@@ -15,6 +15,7 @@ an in-flight job report PENDING (not FAIL) so the harness is safe to run any tim
 
 import csv
 import json
+import re
 import importlib.util
 import sys
 from collections import Counter, defaultdict
@@ -442,6 +443,76 @@ eq("prediction", "genus-vs-env ratio", (gp - floor) / (envf - floor), E_PRED["ra
 pi = read(EXP / "prediction_outputs/prediction_permutation_importance.csv")
 pos = [r["variable"] for r in pi if float(r["importance_mean"]) > 0]
 same("prediction", "only positive-importance axis", pos, [E_PRED["only_positive_axis"]])
+
+# ------------------------------------------------------------------ multiplicity
+# Each colour x environment analysis is a grid of tests, so VERIFIED_Numbers §1c
+# states what survives Benjamini-Hochberg. Recompute those q-values here so the
+# claim cannot drift away from the CSVs.
+section("Multiple testing (VERIFIED_Numbers §1c)")
+
+
+def bh_q(pvals):
+    p = sorted(pvals)
+    n = len(p)
+    q, running = [0.0] * n, 1.0
+    for i in range(n - 1, -1, -1):
+        running = min(running, p[i] * n / (i + 1))
+        q[i] = min(running, 1.0)
+    return dict(zip(p, q))
+
+
+def survivors(rows, pcol, keyfn, alpha=0.05):
+    ps = [float(r[pcol]) for r in rows]
+    qmap = bh_q(ps)
+    return ({keyfn(r) for r in rows if qmap[float(r[pcol])] < alpha},
+            len(rows), sum(1 for p in ps if p < alpha), qmap)
+
+pcgrid = [r for r in read(ROOT / "Results/tables/mcmc/all_fixed_effects_combined.csv")
+          if re.fullmatch(r"PC\d+", r["variable"])]
+surv, ntests, nraw, qmap = survivors(
+    pcgrid, "pMCMC", lambda r: f"{r['color']}~{r['variable']}")
+same("multiplicity", "primary PC grid: tests", ntests, 30)
+same("multiplicity", "primary PC grid: raw sig", nraw, 3)
+same("multiplicity", "primary PC grid: survives BH", sorted(surv),
+     ["WHITE~PC2", "YELLOW~PC2"])
+eq("multiplicity", "primary REDTYPE~PC3 q (not sig)",
+   qmap[0.0162], 0.162, 0.002)
+
+elev = [r for r in read(ROOT / "Results/tables/elevation/elevation_mcmc_results.csv")
+        if r["variable"] == "alt_scaled"]
+surv, ntests, nraw, _ = survivors(elev, "pMCMC", lambda r: r["color"])
+same("multiplicity", "elevation: tests", ntests, 3)
+same("multiplicity", "elevation: survives BH", sorted(surv), ["REDTYPE", "WHITE"])
+
+rq4 = [r for r in read(EXP / "wp4_label_variants/results/"
+                       "wp4_fixed_effects_all_variants.csv")
+       if re.fullmatch(r"PC\d+", r["variable"])]
+surv, ntests, nraw, qmap = survivors(
+    rq4, "pMCMC", lambda r: f"{r['color']}~{r['variable']}")
+same("multiplicity", "RQ4 grid: tests", ntests, 120)
+same("multiplicity", "RQ4 grid: raw sig", nraw, 13)
+same("multiplicity", "RQ4 grid: survives BH", sorted(surv),
+     ["WHITE~PC2", "YELLOW~PC2"])
+# every surviving effect must hold under all four label sources
+for eff in ("WHITE~PC2", "YELLOW~PC2"):
+    col, var = eff.split("~")
+    hits = {r["variant"] for r in rq4
+            if r["color"] == col and r["variable"] == var
+            and float(r["pMCMC"]) < 0.05}
+    same("multiplicity", f"RQ4 {eff} sig under all sources", len(hits), 4)
+# the secondary hits must all be non-significant after correction
+secondary = sorted({f"{r['color']}~{r['variable']}" for r in rq4
+                    if float(r["pMCMC"]) < 0.05
+                    and f"{r['color']}~{r['variable']}" not in surv})
+same("multiplicity", "RQ4 secondary hits (all fail BH)", secondary,
+     ["REDTYPE~PC7", "WHITE~PC9", "YELLOW~PC4"])
+
+rel = read(ROOT / "Results/tables/reliability/reliability_mcmc_effects.csv")
+surv, ntests, nraw, _ = survivors(
+    rel, "pMCMC", lambda r: f"{r['subset']}/{r['color']}~{r['effect']}")
+same("multiplicity", "reliability: tests", ntests, 12)
+same("multiplicity", "reliability: raw sig", nraw, 4)
+same("multiplicity", "reliability: all raw-sig survive BH", nraw, len(surv))
 
 # ----------------------------------------------------------------------- figures
 section("Figures present")

@@ -144,6 +144,18 @@ def save(fig, name: str, caption: str = "", caption_y: float = -0.045):
     print(f"  {name}.pdf / .png")
 
 
+def bh_qvalues(pvals):
+    """Benjamini-Hochberg q-values, order preserved."""
+    p = np.asarray(pvals, dtype=float)
+    n = len(p)
+    order = np.argsort(p)
+    ranked = p[order] * n / np.arange(1, n + 1)
+    ranked = np.minimum.accumulate(ranked[::-1])[::-1]
+    out = np.empty(n)
+    out[order] = np.minimum(ranked, 1.0)
+    return out
+
+
 def despread(values, min_gap):
     """Nudge label positions apart while preserving order (label de-collision)."""
     order = np.argsort(values)
@@ -182,7 +194,10 @@ def kappa(yt, yp):
     return float((po - pe) / (1 - pe)) if pe < 1 else 0.0
 
 
-def boot_ci(yt, yp, fn, n_boot=4000, seed=7):
+BOOT_N = 4000
+
+
+def boot_ci(yt, yp, fn, n_boot=BOOT_N, seed=7):
     rng = np.random.default_rng(seed)
     n = len(yt)
     vals = np.empty(n_boot)
@@ -217,7 +232,7 @@ def model_predictions():
 # Figure 1 - benchmark dot plot with bootstrap intervals + per-class F1
 # --------------------------------------------------------------------------
 
-def fig1_benchmark(data):
+def fig1_benchmark(gold, data):
     fig = plt.figure(figsize=(9.6, 4.3), constrained_layout=True)
     gs = fig.add_gridspec(1, 2, width_ratios=[1.28, 1.0], wspace=0.06)
     axL = fig.add_subplot(gs[0, 0])
@@ -289,10 +304,17 @@ def fig1_benchmark(data):
     cb.outline.set_visible(False)
     cb.ax.tick_params(labelsize=7, length=2)
 
-    fig.suptitle("RQ1  Multi-model benchmark on the 98-item expert gold set",
+    fig.suptitle(f"RQ1  Multi-model benchmark on the {len(gold)}-item expert gold set",
                  fontsize=12, fontweight="bold", x=0.008, ha="left")
+    n_scored = {m: len(data[m]["yt"]) for m in MODEL_ORDER}
+    short = {m: n for m, n in n_scored.items() if n < len(gold)}
+    note = ("".join(f" {MODEL_LABELS[m]} aligns to {n} of the {len(gold)} items "
+                    "(one gold treatment is a parse artifact whose species_id does "
+                    "not match that pipeline's output)." for m, n in short.items())
+            if short else "")
     save(fig, "fig7_benchmark",
-         "Categoriser v1. Intervals are 4,000-replicate bootstrap percentiles.")
+         f"Categoriser v1. Intervals are {BOOT_N:,}-replicate bootstrap "
+         f"percentiles.{note}")
 
 
 # --------------------------------------------------------------------------
@@ -735,12 +757,40 @@ def fig6_forest():
 
     fig.suptitle("RQ4  Do the ecological associations survive a change of label "
                  "source?", fontsize=12, fontweight="bold", x=0.005, ha="left")
+    # n / chain count / MPSRF read from the run, never hardcoded. Each label source
+    # has its own n, so report them all: the keyword baseline labels far fewer
+    # species, which is part of why its intervals are the widest.
+    n_by_src = {m: len(pd.read_csv(EXP / "wp4_label_variants" /
+                                   f"species_color_environment_{m}.csv"))
+                for m in MODEL_ORDER}
+    n_txt = ", ".join(f"{n:,} ({MODEL_LABELS[m]})" for m, n in n_by_src.items())
+    conv = pd.read_csv(EXP / "wp4_label_variants" / "results" / "wp4_convergence.csv")
+    n_chains = len(pd.read_csv(EXP / "wp4_label_variants" / "mcmc_manifest.csv")
+                   .chain.unique())
+
+    # Multiplicity: 3 colours x 10 PCs x 4 label sources is 120 tests, so ~6 hits
+    # are expected at pMCMC < 0.05 by chance. Report which effects actually
+    # survive FDR correction so the figure cannot be read as 13 real effects.
+    alltests = fx[fx.variable.isin(RQ4_PCS)]
+    n_tests = len(alltests)
+    q = bh_qvalues(alltests.pMCMC.values)
+    surv = alltests.assign(q=q)
+    pc2 = surv[(surv.variable == "PC2") & (surv.color.isin(["WHITE", "YELLOW"]))]
+    q_pc2 = pc2.q.max()
+    others = surv[(surv.pMCMC < 0.05) & ~surv.index.isin(pc2.index)]
+    n_other, q_other = len(others), others.q.min()
     save(fig, "fig12_rq4_forest",
          f"All {len(colours) * len(pcs)} colour \u00d7 PC effects per label source. "
-         "MCMCglmm fixed effects, n = 1,174 species, 3 chains per model "
-         "(MPSRF \u2248 1.0). Filled markers are significant at pMCMC < 0.05. "
-         "Higher PCs carry much wider intervals, so the label-sensitive effects "
-         "(WHITE \u00d7 PC9, REDTYPE \u00d7 PC7) are also the least precisely estimated.",
+         f"MCMCglmm fixed effects, {n_chains} chains per model "
+         f"(worst MPSRF {conv.mpsrf.max():.5f}). Filled markers are significant at\n"
+         f"pMCMC < 0.05. n = {n_txt};\n"
+         "the keyword baseline labels fewer species, so its comparisons confound "
+         f"label accuracy with sample composition. Across all {n_tests} tests only\n"
+         f"WHITE \u00d7 PC2 and YELLOW \u00d7 PC2 survive Benjamini-Hochberg "
+         f"correction (q \u2264 {q_pc2:.3f}, significant under every label source); "
+         f"the {n_other} scattered\nmarginal hits have q \u2265 {q_other:.2f} and are "
+         f"consistent with the \u2248{0.05 * n_tests:.0f} false positives expected "
+         "at pMCMC < 0.05.",
          caption_y=-0.085)
 
 
@@ -848,7 +898,9 @@ def fig7_concordance():
          f"Each point is one colour \u00d7 PC fixed effect "
          f"({len(colours) * len(pcs)} per model); the shaded\n"
          "corridor is \u00b10.02 around the identity line. Open markers are effects whose\n"
-         "credible interval spans zero under at least one label source.")
+         "credible interval spans zero under at least one label source. Label sources\n"
+         "differ in n (see fig12), so scatter reflects sample composition as well as\n"
+         "label accuracy.")
 
 
 # --------------------------------------------------------------------------
@@ -856,7 +908,7 @@ def fig7_concordance():
 def main():
     print(f"Writing figures to {OUT}")
     gold, data = model_predictions()
-    fig1_benchmark(data)
+    fig1_benchmark(gold, data)
     fig2_confusion(data)
     fig3_flow(data)
     fig4_taxonomy()
