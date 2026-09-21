@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-fig14 — can flower colour be predicted from environment?
+fig14: can flower colour be predicted from environment?
 
 Follows the same design rules as 22_Build_Method_Figures.py: estimates carry
 uncertainty, one message per panel, PDF + 400-dpi PNG.
@@ -36,21 +36,23 @@ import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
 
+import sys  # noqa: E402
+sys.path.insert(0, str(Path("/scratch/dp23301/Thesis") / "scripts" / "lib"))
+from figure_style import GRID, INK, MUTED, apply as apply_style  # noqa: E402
+
+apply_style()
+
 BASE = Path("/scratch/dp23301/Thesis")
 EXP = BASE / "Processed Data" / "experiments"
 PRED = EXP / "prediction_outputs"
 OUT = EXP / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 
-INK = "#1b1b1b"
-MUTED = "#6e6e6e"
-GRID = "#dcdcdc"
-
 MODEL_LABELS = {
     "majority": "Majority class",
     "genus_prior": "Genus prior (no environment)",
-    "logreg": "Logistic regression (PC1–PC10)",
-    "random_forest": "Random forest (PC1–PC10)",
+    "logreg": "Logistic regression (PC1-PC10)",
+    "random_forest": "Random forest (PC1-PC10)",
 }
 MODEL_COLOR = {
     "majority": "#9a9a9a",
@@ -94,7 +96,7 @@ def panel_a(ax, df):
     # data-driven so the value labels never fall outside the axes
     ax.set_xlim(d.macro_f1_lo.min() - 0.05, d.macro_f1_hi.max() + 0.07)
     ax.set_ylim(-0.7, len(ORDER) - 0.3)
-    ax.set_title("A  Environment barely beats the floor",
+    ax.set_title("A  Macro-F1, genus-grouped CV",
                  loc="left", fontsize=9.5, color=INK, fontweight="bold")
     ax.grid(axis="x", color=GRID, lw=0.6, zorder=0)
     ax.set_axisbelow(True)
@@ -128,13 +130,13 @@ def panel_b(ax, df, best_env):
     ax.set_xlim(vals.min() - 0.10, vals.max() + 0.12)
     # headroom above the top row so the legend never sits on the data
     ax.set_ylim(-0.65, len(show) + 0.35)
-    ax.set_title("B  Relatedness carries the signal",
+    ax.set_title("B  Grouped versus ungrouped CV",
                  loc="left", fontsize=9.5, color=INK, fontweight="bold")
     ax.legend(handles=[
         Line2D([], [], marker="o", ls="none", mfc="white", mec=INK, mew=2,
                ms=6.5, label="genus-grouped CV"),
         Line2D([], [], marker="o", ls="none", color=INK, ms=6.5,
-               label="ungrouped CV (genus leaks)"),
+               label="ungrouped CV"),
     ], fontsize=7.6, frameon=False, loc="upper center",
         bbox_to_anchor=(0.5, 1.02), ncol=2, columnspacing=1.1,
         handletextpad=0.4)
@@ -156,7 +158,7 @@ def panel_c(ax, pi):
     ax.set_yticks(ys)
     ax.set_yticklabels(pi.variable, fontsize=8.5)
     ax.set_xlabel("Drop in macro-F₁ when permuted", fontsize=9)
-    ax.set_title("C  PC2 is the only useful axis",
+    ax.set_title("C  Permutation importance",
                  loc="left", fontsize=9.5, color=INK, fontweight="bold")
     ax.grid(axis="x", color=GRID, lw=0.6, zorder=0)
     ax.set_axisbelow(True)
@@ -169,40 +171,18 @@ def main():
     meta = json.loads((PRED / "prediction_run_metadata.json").read_text())
     best_env = meta["best_env_model_grouped"]
 
-    # every number in the title/caption comes from the run, never hardcoded
-    grouped = df[df.cv == GROUPED].set_index("model")
-    floor_f1 = grouped.loc["majority", "macro_f1"]
-    env_f1 = grouped.loc[best_env, "macro_f1"]
-    env_balacc = grouped.loc[best_env, "balanced_accuracy"]
-    chance_balacc = grouped.loc["majority", "balanced_accuracy"]
-    genus_f1 = df[(df.cv == UNGROUPED) & (df.model == "genus_prior")].macro_f1.iat[0]
-    # how much further above the majority floor relatedness gets us
-    ratio = (genus_f1 - floor_f1) / (env_f1 - floor_f1)
-    top_axis = pi.sort_values("importance_mean", ascending=False).variable.iat[0]
-
-    fig = plt.figure(figsize=(13.4, 4.8))
+    fig = plt.figure(figsize=(13.4, 4.4))
     gs = fig.add_gridspec(1, 3, width_ratios=[1.15, 1.0, 0.8],
                           wspace=0.62, left=0.145, right=0.985,
-                          top=0.78, bottom=0.27)
+                          top=0.82, bottom=0.16)
     panel_a(fig.add_subplot(gs[0, 0]), df)
     panel_b(fig.add_subplot(gs[0, 1]), df, best_env)
     panel_c(fig.add_subplot(gs[0, 2]), pi)
 
     fig.suptitle(
         "Predicting flower colour from environment "
-        f"(n = {meta['n_species']:,} species, {meta['n_genera']} genera)",
-        x=0.008, ha="left", fontsize=11.5, fontweight="bold", color=INK, y=0.97,
-    )
-    fig.text(
-        0.008, 0.035,
-        "Colour–environment associations are statistically robust but weakly "
-        f"predictive: the best environment model reaches balanced accuracy "
-        f"{env_balacc:.3f} against a {chance_balacc:.3f} chance floor.\n"
-        f"Knowing a species' genus lifts macro-F₁ {ratio:.1f}× further above the "
-        "majority floor than its entire climate and soil niche, and "
-        f"{top_axis} is the only informative axis — independently reproducing the "
-        "MCMCglmm result.",
-        ha="left", va="bottom", fontsize=8.2, color=MUTED,
+        f"(n = {meta['n_species']:,})",
+        x=0.008, ha="left", fontsize=12, fontweight="bold", color=INK, y=0.98,
     )
 
     publish = BASE / "Results" / "figures" / "methods"

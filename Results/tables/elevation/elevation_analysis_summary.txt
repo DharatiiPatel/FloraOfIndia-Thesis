@@ -1,6 +1,8 @@
-Elevation Gradient Analysis — Primary Analysis Summary
+Elevation Gradient Analysis — primary set summary
 ==================================================
-Date: 2026-08-14 16:46:54.232819
+Date: 2026-09-21 16:29:13.694967
+ECOLOGY_SET: primary
+Input: /scratch/dp23301/Thesis/Processed Data/experiments/expansion/step05b_outputs/species_color_environment_final_expanded.csv
 Species analysed: 1438
 Elevation range (m): 12 - 4901
 SKIP_ELEV_MCMC: TRUE
@@ -13,5 +15,4 @@ data:  chi_tab
 X-squared = 31.246, df = 8, p-value = 0.000127
 
 
-Outputs under Processed Data/experiments/expansion/step08_outputs/
-(internal path name retained; this is the primary analysis set, n=1,438)
+Outputs under: /scratch/dp23301/Thesis/Processed Data/experiments/expansion/step08_outputs

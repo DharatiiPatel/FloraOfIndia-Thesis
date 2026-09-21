@@ -50,10 +50,10 @@ skip_mcmc <- identical(Sys.getenv("SKIP_ELEV_MCMC", ""), "1")
 
 ELEV_BREAKS <- c(-Inf, 500, 1500, 3000, 4500, Inf)
 ELEV_LABELS <- c(
-  "Lowland\n(0–500 m)",
-  "Submontane\n(500–1500 m)",
-  "Montane\n(1500–3000 m)",
-  "Subalpine\n(3000–4500 m)",
+  "Lowland\n(0-500 m)",
+  "Submontane\n(500-1500 m)",
+  "Montane\n(1500-3000 m)",
+  "Subalpine\n(3000-4500 m)",
   "Alpine\n(>4500 m)"
 )
 
@@ -66,17 +66,8 @@ BURNIN <- 50000
 THIN   <- 100
 PRIOR  <- list(R = list(V = 1, fix = 1), G = list(G1 = list(V = 1, nu = 0.002)))
 
-COLOR_PANEL <- c(WHITE = "#D9D9D9", YELLOW = "#D9B556", REDTYPE = "#A3262D")
-COL_SIG     <- "#A3262A"
-COL_NONSIG  <- "#999999"
-
-theme_paper <- theme_minimal(base_size = 12) +
-  theme(
-    plot.title    = element_text(face = "bold", hjust = 0.5),
-    plot.subtitle = element_text(hjust = 0.5, colour = "grey35"),
-    strip.text    = element_text(face = "bold"),
-    panel.grid.minor = element_blank()
-  )
+COL_SIG    <- "#A3262A"
+COL_NONSIG <- "#999999"
 
 message("Loading elevation data (", eco_set, " set)...")
 
@@ -94,8 +85,7 @@ df <- df %>%
   )
 
 n_elev <- nrow(df)
-n_subtitle <- sprintf("Analysis set with elevation, n = %s",
-                      format(n_elev, big.mark = ","))
+n_subtitle <- sprintf("n = %s", format(n_elev, big.mark = ","))
 message("Species with elevation: ", n_elev)
 message("Elevation range (m): ", round(min(df$alt)), " – ", round(max(df$alt)))
 
@@ -227,8 +217,7 @@ prop_df <- band_summary %>%
     pct_white = "WHITE", pct_yellow = "YELLOW", pct_redtype = "REDTYPE"
   ))
 
-p_prop <- plot_elev_proportions(prop_df, band_summary) +
-  labs(caption = n_subtitle)
+p_prop <- plot_elev_proportions(prop_df, band_summary)
 save_fig(file.path(fig_dir, "fig6_elevation_colour_proportions.png"), p_prop, 8.6, 4.8)
 
 count_df <- band_summary %>%
@@ -238,20 +227,19 @@ count_df <- band_summary %>%
     n_white = "WHITE", n_yellow = "YELLOW", n_redtype = "REDTYPE"
   ))
 
-p_count <- plot_elev_counts(count_df, band_summary) +
-  labs(caption = n_subtitle)
+p_count <- plot_elev_counts(count_df, band_summary)
 save_fig(file.path(fig_dir, "fig6_elevation_species_counts.png"), p_count, 9.2, 4.8)
 
 p_density <- ggplot(df, aes(x = alt, fill = color_group)) +
   geom_density(alpha = 0.45, colour = NA) +
-  scale_fill_manual(values = COLOR_PANEL, name = "Colour group") +
+  scale_fill_manual(values = PUB_CLASS_COLORS, name = NULL) +
   scale_x_continuous(labels = comma) +
   labs(
-    title = "Elevation Distribution of Species by Flower Colour",
-    subtitle = paste0("WorldClim altitude (species-level trimmed mean) — ", n_subtitle),
+    title = "Elevation by flower colour",
+    subtitle = n_subtitle,
     x = "Elevation (m)", y = "Density"
   ) +
-  theme_paper
+  theme_pub()
 
 save_fig(file.path(fig_dir, "fig6_elevation_density.png"), p_density, 10, 5)
 
@@ -278,11 +266,11 @@ if (!is.null(elev_effects) && nrow(elev_effects) > 0) {
     scale_colour_manual(values = c("TRUE" = COL_SIG, "FALSE" = COL_NONSIG), guide = "none") +
     scale_fill_manual(values = c("TRUE" = COL_SIG, "FALSE" = "white"), guide = "none") +
     labs(
-      title = "Elevation Effect on Flower Colour (MCMCglmm)",
-      subtitle = paste0("Posterior mean ± 95% CI; alt scaled; genus RE — ", n_subtitle),
-      x = "Coefficient (alt_scaled)", y = NULL
+      title = "Elevation effect on flower colour",
+      subtitle = n_subtitle,
+      x = "Coefficient (scaled elevation)", y = NULL
     ) +
-    theme_paper
+    theme_pub_forest()
 
   save_fig(file.path(fig_dir, "fig6_elevation_mcmc_coefficients.png"), p_mcmc, 8, 4)
 } else {
@@ -290,15 +278,17 @@ if (!is.null(elev_effects) && nrow(elev_effects) > 0) {
 }
 
 p_pc2 <- ggplot(df, aes(x = elev_band, y = PC2, fill = elev_band)) +
-  geom_boxplot(outlier.size = 0.8, alpha = 0.7, show.legend = FALSE) +
+  geom_boxplot(outlier.size = 0.8, alpha = 0.85, show.legend = FALSE,
+               colour = PUB_INK, linewidth = 0.35) +
   geom_hline(yintercept = 0, linetype = "dashed", colour = "grey50") +
+  scale_fill_manual(values = PUB_STAGE_RAMP(nlevels(df$elev_band))) +
   labs(
-    title = "Environmental PC2 across Elevation Bands",
-    subtitle = paste0("PC2 = fertile-wet-acidic forest soil axis — ", n_subtitle),
+    title = "Environmental PC2 across elevation bands",
+    subtitle = n_subtitle,
     x = NULL, y = "PC2 score"
   ) +
-  theme_paper +
-  theme(axis.text.x = element_text(size = 9))
+  theme_pub() +
+  theme(axis.text.x = element_text(size = 9), legend.position = "none")
 
 save_fig(file.path(fig_dir, "fig6_elevation_pc2_boxplot.png"), p_pc2, 10, 5)
 

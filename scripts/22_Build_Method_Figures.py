@@ -4,7 +4,7 @@ Publication-quality figures for the method-depth chapters (RQ1-RQ4).
 
 Design rules followed here:
   * no bar charts - estimates are shown with uncertainty (dot plots, forests)
-  * every figure has one clear visual message and a self-contained caption line
+  * titles are short; captions live in the thesis, not on the figure
   * no annotation is drawn inside the data area unless it has reserved space
   * vector (PDF) + raster (PNG at 400 dpi) output for both LaTeX and Word
 
@@ -30,6 +30,14 @@ import pandas as pd  # noqa: E402
 from matplotlib.colors import LinearSegmentedColormap  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
 from matplotlib.patches import Patch  # noqa: E402
+
+import sys  # noqa: E402
+sys.path.insert(0, str(Path("/scratch/dp23301/Thesis") / "scripts" / "lib"))
+from figure_style import (  # noqa: E402
+    CLASS_COLOR, GRID, INK, MUTED, apply as apply_style,
+)
+
+apply_style()
 
 BASE = Path("/scratch/dp23301/Thesis")
 EXP = BASE / "Processed Data" / "experiments"
@@ -57,12 +65,8 @@ c2 = _load_module("c2", "14_Categorize_v2.py")
 
 
 # --------------------------------------------------------------------------
-# Shared style
+# Shared style (see scripts/lib/figure_style.py)
 # --------------------------------------------------------------------------
-
-INK = "#1b1b1b"
-MUTED = "#6e6e6e"
-GRID = "#dcdcdc"
 
 # All ten environmental PCs are modelled, so fig12/fig13 show all ten. Truncating
 # to PC1-PC5 hid two of the five significant effects (WHITE x PC9, REDTYPE x PC7).
@@ -88,14 +92,6 @@ PRED_FILES = {
     "llama70b": EXP / "benchmark" / "gold_pred_llama70b.csv",
 }
 
-CLASS_COLOR = {
-    "WHITE": "#b9b3a4",
-    "YELLOW": "#d8a634",
-    "REDTYPE": "#a63f34",
-    "UNKNOWN": "#7c8ba1",
-    "OTHER": "#5f7355",
-}
-
 CMAP_SEQ = LinearSegmentedColormap.from_list(
     "thesis_seq", ["#fbfcfc", "#dceaec", "#a8ccd1", "#5f9fa8", "#256d78", "#0e3d47"]
 )
@@ -103,41 +99,12 @@ CMAP_DIV = LinearSegmentedColormap.from_list(
     "thesis_div", ["#8c3b1b", "#c9865c", "#ece9e4", "#6ba39b", "#14524a"]
 )
 
-mpl.rcParams.update({
-    "font.family": "DejaVu Sans",
-    "font.size": 9,
-    "axes.titlesize": 10,
-    "axes.titleweight": "bold",
-    "axes.labelsize": 9,
-    "axes.edgecolor": "#4a4a4a",
-    "axes.linewidth": 0.7,
-    "axes.spines.top": False,
-    "axes.spines.right": False,
-    "xtick.color": INK,
-    "ytick.color": INK,
-    "xtick.major.width": 0.7,
-    "ytick.major.width": 0.7,
-    "xtick.labelsize": 8,
-    "ytick.labelsize": 8,
-    "legend.fontsize": 8,
-    "figure.dpi": 130,
-    "savefig.dpi": 400,
-    "pdf.fonttype": 42,
-    "ps.fonttype": 42,
-})
 
-
-def save(fig, name: str, caption: str = "", caption_y: float = -0.045):
-    """Save PDF + PNG. The caption is placed *below* the figure box so that
-    `bbox_inches='tight'` grows the canvas instead of overprinting axis labels."""
-    if caption:
-        fig.text(0.0, caption_y, caption, ha="left", va="top",
-                 fontsize=7.2, color=MUTED, linespacing=1.45)
+def save(fig, name: str):
+    """Save PDF + PNG. Captions belong in the thesis, not on the figure."""
     for ext in ("pdf", "png"):
         fig.savefig(OUT / f"{name}.{ext}", bbox_inches="tight",
                     facecolor="white", pad_inches=0.20)
-        # publish alongside the other figure scripts (08, 23, 26 all do this), so
-        # rerunning this script cannot leave Results/ holding a stale figure
         PUBLISH.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(OUT / f"{name}.{ext}", PUBLISH / f"{name}.{ext}")
     plt.close(fig)
@@ -304,17 +271,9 @@ def fig1_benchmark(gold, data):
     cb.outline.set_visible(False)
     cb.ax.tick_params(labelsize=7, length=2)
 
-    fig.suptitle(f"RQ1  Multi-model benchmark on the {len(gold)}-item expert gold set",
+    fig.suptitle(f"Multi-model benchmark on the gold set (n = {len(gold)})",
                  fontsize=12, fontweight="bold", x=0.008, ha="left")
-    n_scored = {m: len(data[m]["yt"]) for m in MODEL_ORDER}
-    short = {m: n for m, n in n_scored.items() if n < len(gold)}
-    note = ("".join(f" {MODEL_LABELS[m]} aligns to {n} of the {len(gold)} items "
-                    "(one gold treatment is a parse artifact whose species_id does "
-                    "not match that pipeline's output)." for m, n in short.items())
-            if short else "")
-    save(fig, "fig7_benchmark",
-         f"Categoriser v1. Intervals are {BOOT_N:,}-replicate bootstrap "
-         f"percentiles.{note}")
+    save(fig, "fig7_benchmark")
 
 
 # --------------------------------------------------------------------------
@@ -366,11 +325,9 @@ def fig2_confusion(data):
     cb.outline.set_visible(False)
     cb.ax.tick_params(labelsize=7, length=2)
 
-    fig.suptitle("RQ1  Where the errors sit: row-normalised confusion structure",
+    fig.suptitle("Confusion structure against gold labels",
                  fontsize=12, fontweight="bold", x=0.005, ha="left")
-    save(fig, "fig8_confusion",
-         "Shading is the proportion of each gold class; printed values are item "
-         "counts. OTHER occurs only as a prediction.")
+    save(fig, "fig8_confusion")
 
 
 # --------------------------------------------------------------------------
@@ -438,7 +395,7 @@ def _alluvial(ax, yt, yp, title):
                 va="center", fontsize=8, color=INK)
 
     n_err = int((yt != yp).sum())
-    ax.set_title(f"{title}   \u00b7   {n_err} misrouted of {n}", loc="left")
+    ax.set_title(f"{title}  ({n_err} misrouted of {n})", loc="left")
     ax.set_xlim(-0.52, 1.52)
     ax.set_ylim(-gap, max(ltot, rtot + shift) + gap)
     ax.axis("off")
@@ -451,7 +408,7 @@ def fig3_flow(data):
     _alluvial(axes[1], data["qwen7b"]["yt"], data["qwen7b"]["yp"],
               "Qwen2.5-7B")
     for ax in axes:
-        ax.text(0.5, -0.005, "gold  \u2192  predicted", transform=ax.transAxes,
+        ax.text(0.5, -0.005, "gold to predicted", transform=ax.transAxes,
                 ha="center", va="top", fontsize=8, color=MUTED)
 
     fig.legend(handles=[
@@ -460,10 +417,9 @@ def fig3_flow(data):
         Patch(facecolor="#b8503f", alpha=0.62, label="misrouted"),
     ], loc="lower center", ncol=2, frameon=False, bbox_to_anchor=(0.5, -0.055))
 
-    fig.suptitle("RQ1  Label flow from gold class to model prediction",
+    fig.suptitle("Label flow from gold class to prediction",
                  fontsize=12, fontweight="bold", x=0.005, ha="left")
-    save(fig, "fig9_label_flow",
-         "Ribbon thickness is item count.", caption_y=-0.10)
+    save(fig, "fig9_label_flow")
 
 
 # --------------------------------------------------------------------------
@@ -517,7 +473,6 @@ def fig4_taxonomy():
     ax.spines["left"].set_visible(False)
     ax.spines["bottom"].set_visible(False)
     ax.tick_params(length=0)
-    ax.set_title("Disagreements with gold, by failure mode", loc="left")
 
     # marginal: total per error class as a lollipop (not a bar)
     totals = tab.sum().values
@@ -534,11 +489,9 @@ def fig4_taxonomy():
     axm.xaxis.grid(True, color=GRID, lw=0.6)
     axm.set_axisbelow(True)
 
-    fig.suptitle("RQ2  Error taxonomy: what kind of mistake is each system making?",
+    fig.suptitle("Error taxonomy of disagreements with gold",
                  fontsize=12, fontweight="bold", x=0.005, ha="left")
-    save(fig, "fig10_error_taxonomy",
-         "Marker area and printed value are item counts; a cross marks a failure "
-         "mode a system never exhibits.")
+    save(fig, "fig10_error_taxonomy")
 
 
 # --------------------------------------------------------------------------
@@ -609,10 +562,10 @@ def fig5_interventions():
     # ---- B: item-level repair grid for the Qwen-7B ladder ----
     gold = load_gold()
     configs = [
-        ("Zero-shot  \u00b7  v1", EXP / "benchmark/gold_pred_qwen7b_full.csv", c2.categorize_v1),
-        ("Zero-shot  \u00b7  v2", EXP / "benchmark/gold_pred_qwen7b_full.csv", c2.categorize_v2),
-        ("RAG  \u00b7  v1", EXP / "rq3_outputs/gold_pred_qwen7b_rag.csv", c2.categorize_v1),
-        ("RAG  \u00b7  v2", EXP / "rq3_outputs/gold_pred_qwen7b_rag.csv", c2.categorize_v2),
+        ("Zero-shot, v1", EXP / "benchmark/gold_pred_qwen7b_full.csv", c2.categorize_v1),
+        ("Zero-shot, v2", EXP / "benchmark/gold_pred_qwen7b_full.csv", c2.categorize_v2),
+        ("RAG, v1", EXP / "rq3_outputs/gold_pred_qwen7b_rag.csv", c2.categorize_v1),
+        ("RAG, v2", EXP / "rq3_outputs/gold_pred_qwen7b_rag.csv", c2.categorize_v2),
     ]
     raw = {}
     for _, path, _fn in configs:
@@ -679,8 +632,8 @@ def fig5_interventions():
     for s in ax2.spines.values():
         s.set_visible(False)
 
-    axG.set_title(f"Qwen2.5-7B \u00b7 the {k} items any configuration fails "
-                  f"or abstains on", loc="left", fontsize=9.5)
+    axG.set_title(f"Qwen2.5-7B: {k} items still failed or abstained",
+                  loc="left", fontsize=9.5)
     axG.legend(handles=[
         Patch(facecolor=C_OK, label="correct"),
         Patch(facecolor=C_BAD, label="incorrect"),
@@ -689,12 +642,10 @@ def fig5_interventions():
     ], loc="upper left", bbox_to_anchor=(0.0, -0.36), ncol=3, frameon=False)
     panel_tag(axG, "B", dx=-0.075)
 
-    fig.suptitle("RQ3  Interventions: better class mapping, retrieval grounding, "
-                 "and abstention", fontsize=12, fontweight="bold",
+    fig.suptitle("Categoriser mapping and retrieval interventions",
+                 fontsize=12, fontweight="bold",
                  x=0.005, ha="left")
-    save(fig, "fig11_interventions",
-         "Panel B: one column per gold item, sorted by how many configurations "
-         "fail it.")
+    save(fig, "fig11_interventions")
 
 
 # --------------------------------------------------------------------------
@@ -755,43 +706,9 @@ def fig6_forest():
     fig.legend(handles=handles, loc="lower center", ncol=5, frameon=False,
                bbox_to_anchor=(0.5, -0.075))
 
-    fig.suptitle("RQ4  Do the ecological associations survive a change of label "
-                 "source?", fontsize=12, fontweight="bold", x=0.005, ha="left")
-    # n / chain count / MPSRF read from the run, never hardcoded. Each label source
-    # has its own n, so report them all: the keyword baseline labels far fewer
-    # species, which is part of why its intervals are the widest.
-    n_by_src = {m: len(pd.read_csv(EXP / "wp4_label_variants" /
-                                   f"species_color_environment_{m}.csv"))
-                for m in MODEL_ORDER}
-    n_txt = ", ".join(f"{n:,} ({MODEL_LABELS[m]})" for m, n in n_by_src.items())
-    conv = pd.read_csv(EXP / "wp4_label_variants" / "results" / "wp4_convergence.csv")
-    n_chains = len(pd.read_csv(EXP / "wp4_label_variants" / "mcmc_manifest.csv")
-                   .chain.unique())
-
-    # Multiplicity: 3 colours x 10 PCs x 4 label sources is 120 tests, so ~6 hits
-    # are expected at pMCMC < 0.05 by chance. Report which effects actually
-    # survive FDR correction so the figure cannot be read as 13 real effects.
-    alltests = fx[fx.variable.isin(RQ4_PCS)]
-    n_tests = len(alltests)
-    q = bh_qvalues(alltests.pMCMC.values)
-    surv = alltests.assign(q=q)
-    pc2 = surv[(surv.variable == "PC2") & (surv.color.isin(["WHITE", "YELLOW"]))]
-    q_pc2 = pc2.q.max()
-    others = surv[(surv.pMCMC < 0.05) & ~surv.index.isin(pc2.index)]
-    n_other, q_other = len(others), others.q.min()
-    save(fig, "fig12_rq4_forest",
-         f"All {len(colours) * len(pcs)} colour \u00d7 PC effects per label source. "
-         f"MCMCglmm fixed effects, {n_chains} chains per model "
-         f"(worst MPSRF {conv.mpsrf.max():.5f}). Filled markers are significant at\n"
-         f"pMCMC < 0.05. n = {n_txt};\n"
-         "the keyword baseline labels fewer species, so its comparisons confound "
-         f"label accuracy with sample composition. Across all {n_tests} tests only\n"
-         f"WHITE \u00d7 PC2 and YELLOW \u00d7 PC2 survive Benjamini-Hochberg "
-         f"correction (q \u2264 {q_pc2:.3f}, significant under every label source); "
-         f"the {n_other} scattered\nmarginal hits have q \u2265 {q_other:.2f} and are "
-         f"consistent with the \u2248{0.05 * n_tests:.0f} false positives expected "
-         "at pMCMC < 0.05.",
-         caption_y=-0.085)
+    fig.suptitle("Ecological associations across label sources",
+                 fontsize=12, fontweight="bold", x=0.005, ha="left")
+    save(fig, "fig12_rq4_forest")
 
 
 # --------------------------------------------------------------------------
@@ -853,8 +770,6 @@ def fig7_concordance():
     ax.set_aspect("equal")
     ax.set_xlabel("fixed effect under keyword-baseline labels")
     ax.set_ylabel("fixed effect under LLM labels")
-    ax.set_title("Fixed effects under LLM labels against keyword-baseline labels",
-                 loc="left", fontsize=9.5)
     ax.grid(True, color="#efefef", lw=0.5)
     ax.set_axisbelow(True)
     for side in ("top", "right"):
@@ -871,10 +786,10 @@ def fig7_concordance():
             bbox=dict(boxstyle="round,pad=0.45", facecolor="white",
                       edgecolor=GRID, linewidth=0.7))
 
-    ax.annotate("WHITE \u00d7 PC2", xy=(0.095, 0.075), xytext=(0.104, 0.036),
+    ax.annotate("WHITE x PC2", xy=(0.095, 0.075), xytext=(0.104, 0.036),
                 fontsize=7.5, color=MUTED, ha="left",
                 arrowprops=dict(arrowstyle="-", color="#b0b0b0", lw=0.7))
-    ax.annotate("YELLOW \u00d7 PC2", xy=(-0.098, -0.084), xytext=(-0.150, -0.114),
+    ax.annotate("YELLOW x PC2", xy=(-0.098, -0.084), xytext=(-0.150, -0.114),
                 fontsize=7.5, color=MUTED, ha="left",
                 arrowprops=dict(arrowstyle="-", color="#b0b0b0", lw=0.7))
 
@@ -892,15 +807,9 @@ def fig7_concordance():
               fontsize=7.3, handletextpad=0.4, columnspacing=0.9,
               labelspacing=0.35)
 
-    fig.suptitle("RQ4  Coefficient concordance across label sources",
+    fig.suptitle("Coefficient concordance across label sources",
                  fontsize=12, fontweight="bold", x=0.005, ha="left")
-    save(fig, "fig13_rq4_concordance",
-         f"Each point is one colour \u00d7 PC fixed effect "
-         f"({len(colours) * len(pcs)} per model); the shaded\n"
-         "corridor is \u00b10.02 around the identity line. Open markers are effects whose\n"
-         "credible interval spans zero under at least one label source. Label sources\n"
-         "differ in n (see fig12), so scatter reflects sample composition as well as\n"
-         "label accuracy.")
+    save(fig, "fig13_rq4_concordance")
 
 
 # --------------------------------------------------------------------------

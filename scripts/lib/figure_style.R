@@ -38,15 +38,18 @@ PUB_CLASS_COLORS <- c(
 # Sequential ramp for pipeline-stage figures (attrition reads left to right).
 PUB_STAGE_RAMP <- colorRampPalette(c("#2e6f78", "#7aa7ac", "#c3a98a", "#b4622d"))
 
+# DejaVu Sans is the same family matplotlib uses for the method figures.
+PUB_FONT <- "DejaVu Sans"
+
 theme_pub <- function(base_size = 11) {
-  theme_minimal(base_size = base_size, base_family = "sans") +
+  theme_minimal(base_size = base_size, base_family = PUB_FONT) +
     theme(
-      plot.title       = element_text(face = "bold", size = base_size + 2,
+      plot.title       = element_text(face = "bold", size = 12,
                                       hjust = 0, colour = PUB_INK,
-                                      margin = margin(b = 3)),
-      plot.subtitle    = element_text(size = base_size - 0.5, hjust = 0,
+                                      margin = margin(b = 4)),
+      plot.subtitle    = element_text(size = 9.5, hjust = 0,
                                       colour = PUB_MUTED,
-                                      margin = margin(b = 10)),
+                                      margin = margin(b = 8)),
       plot.caption     = element_text(size = base_size - 2.5, hjust = 0,
                                       colour = PUB_MUTED,
                                       margin = margin(t = 10)),
@@ -85,6 +88,19 @@ theme_pub_vbar <- function(base_size = 11) {
     )
 }
 
+# Forest / coefficient plots: no y-grid, left-aligned facet strips.
+theme_pub_forest <- function(base_size = 11) {
+  theme_pub(base_size) +
+    theme(
+      panel.grid.major.y = element_blank(),
+      panel.grid.major.x = element_line(colour = PUB_GRID, linewidth = 0.4),
+      strip.background   = element_rect(fill = "grey90", colour = NA),
+      panel.spacing      = unit(1.2, "lines"),
+      axis.ticks         = element_blank(),
+      legend.position    = "none"
+    )
+}
+
 # ------------------------------------------------------------- fig 1 ---------
 
 #' Flower colour distribution.
@@ -106,10 +122,8 @@ plot_colour_counts <- function(counts) {
     scale_x_continuous(labels = comma,
                        expand = expansion(mult = c(0, 0.20))) +
     labs(
-      title    = "Flower colour distribution in the Flora of India corpus",
-      # Kept: the denominator differs from the n = 1,174 analysis set.
-      subtitle = sprintf("%s species with an extracted colour; UNKNOWN, OTHER and GREENISH excluded",
-                         comma(total)),
+      title    = "Flower colour in the analysis set",
+      subtitle = sprintf("n = %s", comma(total)),
       x = "Number of species", y = NULL
     ) +
     theme_pub_hbar()
@@ -141,11 +155,9 @@ plot_convergence <- function(gr) {
       expand = expansion(mult = c(0, 0.14))
     ) +
     labs(
-      title    = "MCMC convergence: Gelman-Rubin diagnostics",
-      # Kept: explains why the 0.1 threshold line is absent from the plot.
-      subtitle = sprintf("Largest deviation %.5f; the 0.1 threshold is %.0f\u00d7 higher and off this scale",
-                         worst, 0.1 / worst),
-      x = NULL, y = "|PSRF \u2212 1|"
+      title    = "MCMC convergence",
+      subtitle = sprintf("Largest |PSRF - 1| = %.5f", worst),
+      x = NULL, y = "|PSRF - 1|"
     ) +
     theme_pub_vbar() +
     theme(axis.text.x = element_text(size = 7))
@@ -180,7 +192,7 @@ plot_pipeline <- function(pipe) {
                        expand = expansion(mult = c(0, 0.28))) +
     labs(
       # No subtitle: it restated counts already printed on the bars.
-      title = "Species retention through the extraction pipeline",
+      title = "Species retention through the analysis pipeline",
       x = "Number of records", y = NULL
     ) +
     theme_pub_hbar()
@@ -223,10 +235,7 @@ plot_elev_proportions <- function(prop, bands) {
                        expand = expansion(mult = c(0, 0.07))) +
     coord_cartesian(ylim = c(0, 107), clip = "off") +
     labs(
-      title    = "Flower colour composition across elevation bands",
-      # Kept: the Alpine band is small enough that its composition is unstable.
-      subtitle = sprintf("Band sizes are very unequal (n = %s to %s), so the smallest bands are the least certain",
-                         comma(min(bands$n_species)), comma(max(bands$n_species))),
+      title    = "Flower colour across elevation bands",
       x = NULL, y = "Share of species (%)"
     ) +
     theme_pub_vbar() +
@@ -261,8 +270,7 @@ plot_elev_counts <- function(counts, bands) {
                        expand = expansion(mult = c(0, 0.12))) +
     coord_cartesian(ylim = c(-24, NA), clip = "off") +
     labs(
-      # No subtitle: it explained the grouped layout rather than the data.
-      title = "Species counts by elevation band and flower colour",
+      title = "Species counts by elevation band",
       x = NULL, y = "Number of species"
     ) +
     theme_pub_vbar() +

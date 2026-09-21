@@ -19,15 +19,18 @@ mpl.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import FancyBboxPatch  # noqa: E402
 
+import sys  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "lib"))
+from figure_style import INK, MUTED, apply as apply_style  # noqa: E402
+
+apply_style()
+
 ROOT = Path(__file__).resolve().parents[1]
 REL = ROOT / "Processed Data" / "experiments" / "reliability"
 FIG = ROOT / "Results" / "figures" / "reliability"
 TAB = ROOT / "Results" / "tables" / "reliability"
 FIG.mkdir(parents=True, exist_ok=True)
 TAB.mkdir(parents=True, exist_ok=True)
-
-INK = "#1b1b1b"
-MUTED = "#6e6e6e"
 
 
 def _save(fig, stem: str, dpi: int = 400) -> None:
@@ -37,9 +40,9 @@ def _save(fig, stem: str, dpi: int = 400) -> None:
 
 
 def fig_pipeline() -> None:
-    fig, ax = plt.subplots(figsize=(10.2, 3.2))
+    fig, ax = plt.subplots(figsize=(10.2, 2.6))
     ax.set_xlim(0, 10)
-    ax.set_ylim(0, 3)
+    ax.set_ylim(0.85, 2.55)
     ax.axis("off")
     boxes = [
         (0.15, 1.1, 1.7, 1.2, "Three LLM\nextractors"),
@@ -60,11 +63,7 @@ def fig_pipeline() -> None:
         x1 = boxes[i + 1][0]
         ax.annotate("", xy=(x1 - 0.02, 1.7), xytext=(x0 + 0.02, 1.7),
                     arrowprops=dict(arrowstyle="->", color="#1f6f78", lw=1.4))
-    ax.text(5, 0.35,
-            "Keyword baseline is a benchmark only. UNKNOWN is never coded as not-white/yellow/redtype.\n"
-            "High confidence = three-LLM agreement on a known class, using Qwen-7B labels in the ecology models.",
-            ha="center", va="center", fontsize=7.5, color=MUTED)
-    ax.set_title("Reliability protocol (not a new extractor)", fontsize=11,
+    ax.set_title("Reliability protocol", fontsize=12,
                  color=INK, loc="left", pad=8)
     fig.tight_layout()
     _save(fig, "fig15_reliability_pipeline")
@@ -76,7 +75,7 @@ def fig_agreement(summary: dict, rows: list[dict]) -> None:
         ("Ecology species", n),
         ("Three-LLM coverage", summary["three_llm_coverage_n"]),
         ("Known colour, all 3 LLMs", summary["common_known_support_n"]),
-        ("High confidence (agree)", summary["high_confidence_n"]),
+        ("High confidence", summary["high_confidence_n"]),
         ("Disagreement", summary["disagreement_n"]),
     ]
     fig, ax = plt.subplots(figsize=(7.2, 3.6))
@@ -89,11 +88,7 @@ def fig_agreement(summary: dict, rows: list[dict]) -> None:
         ax.text(v + max(8, n * 0.01), yi, str(v), va="center", fontsize=8, color=INK)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
-    n_unsup = summary.get("unsupported_known_colour_n", 0)
-    ax.set_title(
-        f"Three-LLM overlap and confidence  |  unsupported 7B colours: {n_unsup}",
-        fontsize=10, loc="left",
-    )
+    ax.set_title("Three-LLM overlap and confidence", fontsize=12, loc="left")
     fig.tight_layout()
     _save(fig, "fig16_agreement_counts")
 
@@ -111,7 +106,8 @@ def fig_agreement(summary: dict, rows: list[dict]) -> None:
                     "7B, 72B, Llama identical known class"])
         w.writerow(["disagreement", summary["disagreement_n"],
                     "descriptive only; not a third ecology model"])
-        w.writerow(["unsupported_known_colour", n_unsup,
+        w.writerow(["unsupported_known_colour",
+                    summary.get("unsupported_known_colour_n", 0),
                     "7B known class, no floral-window colour evidence"])
         w.writerow(["wrong_context_evidence", summary.get("wrong_context_n", 0),
                     "colour near fruit/leaf/indument, not floral term"])
@@ -147,15 +143,18 @@ def fig_forest(effects_path: Path) -> None:
             ax.plot([lo, hi], [y, y], color=col, lw=1.6)
             ax.scatter([mean], [y], color=col, marker=marker, s=28, zorder=3)
             yticks.append(y)
-            lab = f"{color} ~ {effect.replace('alt_scaled', 'elevation')}  ({subset}, n={r['n']})"
+            lab = (
+                f"{color} ~ {effect.replace('alt_scaled', 'elevation')}  "
+                f"({subset.replace('_', ' ')}, n={r['n']})"
+            )
             yticklabels.append(lab)
             y -= 1
         y -= 0.35
     ax.axvline(0, color="#bbbbbb", lw=1)
     ax.set_yticks(yticks)
     ax.set_yticklabels(yticklabels, fontsize=7.5)
-    ax.set_xlabel("Posterior mean and 95% CI (threshold MCMCglmm, genus RE)")
-    ax.set_title("Fixed common support vs high-confidence subset", loc="left", fontsize=11)
+    ax.set_xlabel("Posterior mean (95% CI)")
+    ax.set_title("Common support versus high-confidence labels", loc="left", fontsize=12)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     fig.tight_layout()
@@ -203,7 +202,7 @@ def fig_traces(draws_path: Path, convergence_path: Path) -> None:
             if r:
                 ax.set_title(
                     f"{colour} ~ {effect.replace('alt_scaled', 'elevation')}"
-                    f"   ({subset}, n={r['n']})",
+                    f"   ({subset.replace('_', ' ')}, n={r['n']})",
                     fontsize=8.5, loc="left", color=INK, pad=3)
                 ax.text(0.985, 0.04,
                         f"MPSRF {float(r['mpsrf']):.5f}   ESS {float(r['eff_samp']):,.0f}",
@@ -214,20 +213,9 @@ def fig_traces(draws_path: Path, convergence_path: Path) -> None:
     for ax in axes[-1]:
         ax.set_xlabel("stored iteration (thinned for display)", fontsize=8)
 
-    worst = max(float(r["mpsrf"]) for r in cvg.values())
-    least = min(float(r["eff_samp"]) for r in cvg.values())
-    n_chains = sorted({r["n_chains"] for r in cvg.values()})[0]
-    fig.suptitle(
-        "Reliability chapter convergence: "
-        f"{n_chains} independent chains per model (seeds 42/123/456)",
-        fontsize=11.5, x=0.008, ha="left", y=0.9985)
-    fig.text(0.008, 0.9762,
-             f"All {len(cvg)} models pass Gelman-Rubin: worst MPSRF {worst:.6f} "
-             f"(threshold 1.01); lowest pooled effective sample size {least:,.0f} "
-             "of 30,000. Chains overlap with no drift.",
-             fontsize=8.5, color=MUTED, ha="left")
-    # dense line art: 400 dpi produces a needlessly huge PNG, the PDF stays vector
-    fig.tight_layout(rect=(0, 0, 1, 0.9705))
+    fig.suptitle("MCMC convergence, reliability models",
+                 fontsize=12, x=0.008, ha="left", y=0.995)
+    fig.tight_layout(rect=(0, 0, 1, 0.985))
     _save(fig, "fig18_reliability_convergence", dpi=200)
 
 

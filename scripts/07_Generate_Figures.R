@@ -39,21 +39,10 @@ s06_sv       <- file.path(step06_tables, "combined/single_variable_models.csv")
 dir.create(fig_dir,    recursive = TRUE, showWarnings = FALSE)
 dir.create(step06_fig, recursive = TRUE, showWarnings = FALSE)
 
-COL_POS_BAR  <- "#B35D45"
-COL_NEG_BAR  <- "#78B0C5"
-COL_SIG      <- "#A3262A"
-COL_NONSIG   <- "#999999"
-COLOR_PANEL  <- c(WHITE = "#D9D9D9", YELLOW = "#D9B556", REDTYPE = "#A3262D")
-
-theme_paper <- theme_minimal(base_size = 12, base_family = "sans") +
-  theme(
-    plot.title      = element_text(face = "bold", size = 13, hjust = 0.5),
-    plot.subtitle   = element_text(size = 11, hjust = 0.5, colour = "grey30"),
-    strip.text      = element_text(face = "bold", size = 12),
-    panel.grid.minor = element_blank(),
-    panel.grid.major.y = element_line(colour = "grey92"),
-    legend.position = "bottom"
-  )
+COL_POS_BAR <- "#B35D45"
+COL_NEG_BAR <- "#78B0C5"
+COL_SIG     <- "#A3262A"
+COL_NONSIG  <- "#999999"
 
 var_label <- function(v) {
   if (v == "alt") return("Others")
@@ -82,7 +71,7 @@ message("Loading primary analysis data (n=1,438 set)...")
 
 df_analysis <- read.csv(env_final_f, check.names = FALSE)
 n_analysis  <- nrow(df_analysis)
-n_subtitle  <- sprintf("Analysis set, n = %s", format(n_analysis, big.mark = ","))
+n_subtitle  <- sprintf("n = %s", format(n_analysis, big.mark = ","))
 message("Analysis N = ", n_analysis)
 
 effects <- read.csv(s06_combined, check.names = FALSE)
@@ -117,7 +106,7 @@ if (has_sv) {
   }
 }
 
-save_fig <- function(path, plot, w, h, dpi = 150) {
+save_fig <- function(path, plot, w, h, dpi = 300) {
   ggsave(path, plot, width = w, height = h, dpi = dpi, bg = "white")
   message("  Saved: ", basename(path))
 }
@@ -139,12 +128,8 @@ make_forest_plot <- function(eff_df, pc_levels, title, subtitle = NULL) {
     scale_fill_manual(values = c("TRUE" = COL_SIG, "FALSE" = "white"), guide = "none") +
     facet_grid(~ color) +
     labs(title = title, subtitle = subtitle,
-         x = "Posterior Mean (95% CI)", y = NULL) +
-    theme_paper +
-    theme(
-      strip.background = element_rect(fill = "grey85", colour = NA),
-      panel.spacing = unit(1.2, "lines")
-    )
+         x = "Posterior mean (95% CI)", y = NULL) +
+    theme_pub_forest()
 }
 
 # ── Figure 1: colour counts (analysis-set composition) ───────────────────────
@@ -154,10 +139,8 @@ color_counts <- df_analysis %>%
   filter(!color_category %in% c("UNKNOWN", "OTHER", "GREENISH")) %>%
   count(color_category, name = "n")
 
-p1 <- plot_colour_counts(color_counts) +
-  labs(title = "Flower colour distribution — analysis set",
-       caption = n_subtitle)
-save_fig(file.path(fig_dir, "fig1_colour_counts.png"), p1, 8.0, 4.4, dpi = 300)
+p1 <- plot_colour_counts(color_counts)
+save_fig(file.path(fig_dir, "fig1_colour_counts.png"), p1, 8.0, 4.4)
 
 # ── Figure 3: PCA loadings ───────────────────────────────────────────────────
 message("Figure 3: PCA loadings...")
@@ -187,11 +170,11 @@ p3 <- ggplot(loading_long, aes(x = loading, y = variable, fill = loading > 0)) +
   geom_vline(xintercept = 0, linewidth = 0.5, colour = "grey40") +
   facet_wrap(~ pc, nrow = 1, scales = "free_x") +
   scale_fill_manual(values = c("TRUE" = COL_POS_BAR, "FALSE" = COL_NEG_BAR), guide = "none") +
-  labs(title = "PCA Factor Loadings of Environmental Variables — Flora of India",
+  labs(title = "PCA loadings of environmental variables",
        subtitle = n_subtitle,
-       x = "Loadings", y = NULL) +
-  theme_paper +
-  theme(axis.text.y = element_text(size = 8))
+       x = "Loading", y = NULL) +
+  theme_pub() +
+  theme(axis.text.y = element_text(size = 8), legend.position = "none")
 
 save_fig(file.path(fig_dir, "fig3_pca_loadings.png"), p3, 14, 7)
 
@@ -204,15 +187,15 @@ eff_pc <- effects %>%
 
 p2 <- make_forest_plot(
   eff_pc, paste0("PC", 1:5),
-  "(a) Effects of environmental PCs on flower colour — Flora of India",
+  "Environmental PCs and flower colour",
   subtitle = n_subtitle
 )
 save_fig(file.path(fig_dir, "fig2_mcmc_coefficients.png"), p2, 12, 5)
 
-message("Figure 2 supplementary: PC6–PC10...")
+message("Figure 2 supplementary: PC6-PC10...")
 p2s <- make_forest_plot(
   eff_pc, paste0("PC", 6:10),
-  "Supplementary: Effects of environmental PCs PC6–PC10",
+  "Environmental PCs 6-10 and flower colour",
   subtitle = n_subtitle
 )
 save_fig(file.path(fig_dir, "fig2_supp_PC6_10.png"), p2s, 12, 5)
@@ -234,10 +217,10 @@ if (has_sv) {
     scale_colour_manual(values = c("TRUE" = COL_SIG, "FALSE" = COL_NONSIG), guide = "none") +
     scale_fill_manual(values = c("TRUE" = COL_SIG, "FALSE" = "white"), guide = "none") +
     facet_grid(color ~ ., scales = "free_y", space = "free_y") +
-    labs(title = "(b) Effects of environmental variables on flower colour",
+    labs(title = "Single environmental variables and flower colour",
          subtitle = n_subtitle,
-         x = "Posterior Mean (95% CI)", y = NULL) +
-    theme_paper +
+         x = "Posterior mean (95% CI)", y = NULL) +
+    theme_pub_forest() +
     theme(axis.text.y = element_text(size = 7))
 
   save_fig(file.path(fig_dir, "fig2b_mcmc_env_variables.png"), p2b, 10, 14)
@@ -247,8 +230,8 @@ if (has_sv) {
 
 # ── Figure 4: convergence ────────────────────────────────────────────────────
 message("Figure 4: Convergence diagnostics...")
-p4 <- plot_convergence(gr_all) + labs(caption = n_subtitle)
-save_fig(file.path(fig_dir, "fig4_convergence.png"), p4, 10.5, 4.0, dpi = 300)
+p4 <- plot_convergence(gr_all)
+save_fig(file.path(fig_dir, "fig4_convergence.png"), p4, 10.5, 4.0)
 
 # ── Figure 5: pipeline summary ───────────────────────────────────────────────
 message("Figure 5: Pipeline summary...")
@@ -287,18 +270,13 @@ pipe_df <- tibble(
 )
 stopifnot(identical(as.integer(pipe_df$n), c(3857L, 3230L, 1674L, 1174L, 1438L)))
 
-p5 <- plot_pipeline(pipe_df) +
-  labs(title = "Species retention through the analysis pipeline",
-       caption = paste0(
-         n_subtitle,
-         ". Last bar is larger than the clean set because fascicle/recovery extracts were added."
-       ))
-save_fig(file.path(fig_dir, "fig5_pipeline_summary.png"), p5, 8.6, 4.4, dpi = 300)
+p5 <- plot_pipeline(pipe_df)
+save_fig(file.path(fig_dir, "fig5_pipeline_summary.png"), p5, 8.6, 4.4)
 
 # Compact coefficient plot (artefact name kept for path stability)
 p_exp <- make_forest_plot(
   eff_pc, paste0("PC", 1:10),
-  "MCMCglmm fixed effects (PC1–PC10)",
+  "MCMCglmm fixed effects (PC1-PC10)",
   subtitle = n_subtitle
 )
 save_fig(file.path(fig_dir, "coefficient_plot_expanded.png"), p_exp, 10, 8)
@@ -331,10 +309,10 @@ if (requireNamespace("coda", quietly = TRUE) && dir.exists(step06_models)) {
     ggplot(trace_df, aes(x = iter, y = value, colour = parameter)) +
       geom_line(linewidth = 0.3, alpha = 0.85) +
       facet_wrap(~ parameter, scales = "free_y", ncol = 3) +
-      labs(title = paste("MCMC Trace —", nm),
+      labs(title = paste("MCMC trace,", nm),
            subtitle = n_subtitle,
            x = "Sample (post burn-in/thin)", y = NULL) +
-      theme_paper +
+      theme_pub() +
       theme(legend.position = "none", strip.text = element_text(size = 9))
   })
 
@@ -347,7 +325,7 @@ if (requireNamespace("coda", quietly = TRUE) && dir.exists(step06_models)) {
   }
 
   p_pc13 <- make_forest_plot(eff_pc, paste0("PC", 1:3),
-                             "MCMCglmm Coefficients — PC1 to PC3",
+                             "MCMCglmm coefficients, PC1 to PC3",
                              subtitle = n_subtitle)
   save_fig(file.path(step06_fig, "coefficient_plot_PC1_PC3.png"), p_pc13, 10, 4)
   save_fig(file.path(fig_dir, "coefficient_plot_PC1_PC3.png"), p_pc13, 10, 4)
@@ -460,13 +438,15 @@ writeLines(c(
   "```",
   "Results/",
   "├── figures/",
-  "│   ├── ecology/         fig1–fig6  colour, climate models, elevation",
-  "│   ├── methods/         fig7–fig14 gold set, errors, RAG, prediction",
+  "│   ├── ecology/         fig1-fig6  colour, climate models, elevation",
+  "│   ├── methods/         fig7-fig14 gold set, errors, RAG, prediction",
+  "│   ├── reliability/     fig15-fig18 overlap, forest, convergence",
   "│   └── supplementary/   extra coefficient and trace plots",
   "├── tables/",
-  "│   ├── mcmc/            colour–environment model output",
+  "│   ├── mcmc/            colour-environment model output",
   "│   ├── elevation/       elevation-band tables",
-  "│   └── descriptive/     colour counts, PCA loadings",
+  "│   ├── descriptive/     colour counts, PCA loadings",
+  "│   └── reliability/     agreement and MCMC diagnostics",
   "```", "",
   paste("Last synced:", Sys.time()),
   paste("Analysis N:", n_analysis)
