@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Publication-quality figures for the method-depth chapters (RQ1-RQ4).
+Publication-quality figures for the method-depth chapters.
 
 Design rules followed here:
   * no bar charts - estimates are shown with uncertainty (dot plots, forests)
@@ -70,7 +70,7 @@ c2 = _load_module("c2", "14_Categorize_v2.py")
 
 # All ten environmental PCs are modelled, so fig12/fig13 show all ten. Truncating
 # to PC1-PC5 hid two of the five significant effects (WHITE x PC9, REDTYPE x PC7).
-RQ4_PCS = [f"PC{i}" for i in range(1, 11)]
+ALL_PCS = [f"PC{i}" for i in range(1, 11)]
 
 MODEL_ORDER = ["baseline", "qwen7b", "qwen72b", "llama70b"]
 MODEL_LABELS = {
@@ -649,13 +649,13 @@ def fig5_interventions():
 
 
 # --------------------------------------------------------------------------
-# Figure 6 - RQ4 forest across label sources
+# Figure 12 - forest across label sources
 # --------------------------------------------------------------------------
 
 def fig6_forest():
     fx = pd.read_csv(EXP / "wp4_label_variants" / "results" /
                      "wp4_fixed_effects_all_variants.csv")
-    pcs = RQ4_PCS
+    pcs = ALL_PCS
     colours = ["WHITE", "YELLOW", "REDTYPE"]
 
     fig, axes = plt.subplots(1, 3, figsize=(12.0, 7.9), sharex=True,
@@ -708,17 +708,17 @@ def fig6_forest():
 
     fig.suptitle("Ecological associations across label sources",
                  fontsize=12, fontweight="bold", x=0.005, ha="left")
-    save(fig, "fig12_rq4_forest")
+    save(fig, "fig12_label_sources")
 
 
 # --------------------------------------------------------------------------
-# Figure 7 - RQ4 concordance of coefficients against the baseline labels
+# Figure 13 - concordance of coefficients against the baseline labels
 # --------------------------------------------------------------------------
 
 def fig7_concordance():
     fx = pd.read_csv(EXP / "wp4_label_variants" / "results" /
                      "wp4_fixed_effects_all_variants.csv")
-    pcs = RQ4_PCS
+    pcs = ALL_PCS
     colours = ["WHITE", "YELLOW", "REDTYPE"]
     marker = {"WHITE": "o", "YELLOW": "s", "REDTYPE": "^"}
 
@@ -809,7 +809,7 @@ def fig7_concordance():
 
     fig.suptitle("Coefficient concordance across label sources",
                  fontsize=12, fontweight="bold", x=0.005, ha="left")
-    save(fig, "fig13_rq4_concordance")
+    save(fig, "fig13_label_concordance")
 
 
 # --------------------------------------------------------------------------

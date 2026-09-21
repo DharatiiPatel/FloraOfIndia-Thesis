@@ -65,7 +65,7 @@ E_FUNNEL = {"primary_ecology": 1438, "three_llm_coverage": 1313, "common_known_s
             "high_confidence": 1129, "disagreement": 20, "unsupported": 26, "wrong_context": 11,
             "agreement_rate": 0.9733}
 E_ROBUST = ["WHITE~PC2", "YELLOW~PC2"]
-# Posterior means cited in VERIFIED_Numbers §8c, pooled over 3 chains (job 48203984).
+# Posterior means cited in VERIFIED_Numbers §12, pooled over 3 chains.
 E_REL_EFFECTS = {
     ("common_known", "WHITE", "PC2"): 0.066741,
     ("common_known", "YELLOW", "PC2"): -0.080198,
@@ -74,7 +74,7 @@ E_REL_EFFECTS = {
     ("high_confidence", "YELLOW", "PC2"): -0.079732,
     ("high_confidence", "REDTYPE", "PC3"): -0.018921,
 }
-# Convergence thresholds for the reliability chapter (§8c).
+# Convergence thresholds for the reliability chapter (§12).
 E_REL_CONVERGENCE = {"n_chains": 3, "pooled_samples": 30000,
                      "mpsrf_max": 1.01, "ess_min": 1000}
 E_PRED = {"n_species": 1438, "n_genera": 417,
@@ -89,7 +89,7 @@ FIGURES = [
     "ecology/fig6_elevation_pc2_boxplot.png", "ecology/fig6_elevation_species_counts.png",
     "methods/fig7_benchmark.png", "methods/fig8_confusion.png", "methods/fig9_label_flow.png",
     "methods/fig10_error_taxonomy.png", "methods/fig11_interventions.png",
-    "methods/fig12_rq4_forest.png", "methods/fig13_rq4_concordance.png",
+    "methods/fig12_label_sources.png", "methods/fig13_label_concordance.png",
     "methods/fig14_prediction.png", "reliability/fig15_reliability_pipeline.png",
     "reliability/fig16_agreement_counts.png", "reliability/fig17_reliability_forest.png",
     "reliability/fig18_reliability_convergence.png",
@@ -454,10 +454,10 @@ pos = [r["variable"] for r in pi if float(r["importance_mean"]) > 0]
 same("prediction", "only positive-importance axis", pos, [E_PRED["only_positive_axis"]])
 
 # ------------------------------------------------------------------ multiplicity
-# Each colour x environment analysis is a grid of tests, so VERIFIED_Numbers §1c
+# Each colour x environment analysis is a grid of tests, so VERIFIED_Numbers §3
 # states what survives Benjamini-Hochberg. Recompute those q-values here so the
 # claim cannot drift away from the CSVs.
-section("Multiple testing (VERIFIED_Numbers §1c)")
+section("Multiple testing (VERIFIED_Numbers §3)")
 
 
 def bh_q(pvals):

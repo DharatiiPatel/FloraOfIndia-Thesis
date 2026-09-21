@@ -49,7 +49,6 @@ Always cite the categoriser with an accuracy: 0.878 is zero-shot + v1,
 0.939 is the same predictions + v2, 0.949 is RAG + v2.
 Provenance: `docs/VERIFIED_Numbers_for_Thesis.md`.
 
-## Regenerating figures
 
 ```bash
 module load R/4.5.1-gfbf-2025a
