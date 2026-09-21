@@ -56,6 +56,7 @@ module load R/4.5.1-gfbf-2025a
 Rscript scripts/07_Generate_Figures.R
 
 python -m venv .venv_figs && .venv_figs/bin/pip install matplotlib numpy pandas scikit-learn
+# 22 now publishes straight into Results/figures/methods/ (no manual copy step)
 .venv_figs/bin/python scripts/22_Build_Method_Figures.py
 .venv_figs/bin/python scripts/21_Predict_Colour_from_Env.py
 .venv_figs/bin/python scripts/23_Build_Prediction_Figure.py

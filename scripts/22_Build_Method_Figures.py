@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 from pathlib import Path
 
 os.environ.setdefault("MPLCONFIGDIR", "/tmp/mplconfig")
@@ -34,6 +35,7 @@ BASE = Path("/scratch/dp23301/Thesis")
 EXP = BASE / "Processed Data" / "experiments"
 OUT = EXP / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
+PUBLISH = BASE / "Results" / "figures" / "methods"
 
 import importlib.util  # noqa: E402
 
@@ -61,6 +63,10 @@ c2 = _load_module("c2", "14_Categorize_v2.py")
 INK = "#1b1b1b"
 MUTED = "#6e6e6e"
 GRID = "#dcdcdc"
+
+# All ten environmental PCs are modelled, so fig12/fig13 show all ten. Truncating
+# to PC1-PC5 hid two of the five significant effects (WHITE x PC9, REDTYPE x PC7).
+RQ4_PCS = [f"PC{i}" for i in range(1, 11)]
 
 MODEL_ORDER = ["baseline", "qwen7b", "qwen72b", "llama70b"]
 MODEL_LABELS = {
@@ -130,6 +136,10 @@ def save(fig, name: str, caption: str = "", caption_y: float = -0.045):
     for ext in ("pdf", "png"):
         fig.savefig(OUT / f"{name}.{ext}", bbox_inches="tight",
                     facecolor="white", pad_inches=0.20)
+        # publish alongside the other figure scripts (08, 23, 26 all do this), so
+        # rerunning this script cannot leave Results/ holding a stale figure
+        PUBLISH.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(OUT / f"{name}.{ext}", PUBLISH / f"{name}.{ext}")
     plt.close(fig)
     print(f"  {name}.pdf / .png")
 
@@ -672,10 +682,10 @@ def fig5_interventions():
 def fig6_forest():
     fx = pd.read_csv(EXP / "wp4_label_variants" / "results" /
                      "wp4_fixed_effects_all_variants.csv")
-    pcs = [f"PC{i}" for i in range(1, 6)]
+    pcs = RQ4_PCS
     colours = ["WHITE", "YELLOW", "REDTYPE"]
 
-    fig, axes = plt.subplots(1, 3, figsize=(12.0, 4.6), sharex=True,
+    fig, axes = plt.subplots(1, 3, figsize=(12.0, 7.9), sharex=True,
                              sharey=True, constrained_layout=True)
     offs = np.linspace(0.26, -0.26, len(MODEL_ORDER))
 
@@ -705,6 +715,10 @@ def fig6_forest():
         ax.set_yticks(range(len(pcs)))
         ax.set_yticklabels(pcs)
         ax.set_ylim(len(pcs) - 0.5, -0.5)
+        # data-driven so the wide PC6-PC10 intervals are never clipped
+        pcrows = fx[fx.variable.isin(pcs)]
+        span = max(abs(pcrows.lower95.min()), abs(pcrows.upper95.max())) * 1.06
+        ax.set_xlim(-span, span)
         ax.set_xlabel("posterior mean (95% credible interval)")
         ax.xaxis.grid(True, color=GRID, lw=0.6)
         ax.set_axisbelow(True)
@@ -722,9 +736,12 @@ def fig6_forest():
     fig.suptitle("RQ4  Do the ecological associations survive a change of label "
                  "source?", fontsize=12, fontweight="bold", x=0.005, ha="left")
     save(fig, "fig12_rq4_forest",
+         f"All {len(colours) * len(pcs)} colour \u00d7 PC effects per label source. "
          "MCMCglmm fixed effects, n = 1,174 species, 3 chains per model "
-         "(MPSRF \u2248 1.0). Filled markers are significant at pMCMC < 0.05.",
-         caption_y=-0.135)
+         "(MPSRF \u2248 1.0). Filled markers are significant at pMCMC < 0.05. "
+         "Higher PCs carry much wider intervals, so the label-sensitive effects "
+         "(WHITE \u00d7 PC9, REDTYPE \u00d7 PC7) are also the least precisely estimated.",
+         caption_y=-0.085)
 
 
 # --------------------------------------------------------------------------
@@ -734,7 +751,7 @@ def fig6_forest():
 def fig7_concordance():
     fx = pd.read_csv(EXP / "wp4_label_variants" / "results" /
                      "wp4_fixed_effects_all_variants.csv")
-    pcs = [f"PC{i}" for i in range(1, 6)]
+    pcs = RQ4_PCS
     colours = ["WHITE", "YELLOW", "REDTYPE"]
     marker = {"WHITE": "o", "YELLOW": "s", "REDTYPE": "^"}
 
@@ -743,7 +760,8 @@ def fig7_concordance():
 
     fig, ax = plt.subplots(figsize=(6.8, 6.4), constrained_layout=True)
 
-    lim = 0.155
+    # data-driven so no point falls outside the square
+    lim = float(fx[fx.variable.isin(pcs)].post_mean.abs().max()) * 1.12
     band = 0.02
     ax.fill_between([-lim, lim], [-lim - band, lim - band],
                     [-lim + band, lim + band], color="#eef1f1", zorder=0,
@@ -793,7 +811,7 @@ def fig7_concordance():
         ax.spines[side].set_visible(True)
         ax.spines[side].set_color(GRID)
 
-    txt = (f"all 15 effects per model\n"
+    txt = (f"all {len(colours) * len(pcs)} effects per model\n"
            + "\n".join(f"   {MODEL_LABELS[m]}:  r = {r:.2f},  max |\u0394| = {d:.3f}"
                        for m, r, d in stats)
            + f"\nsignificant under both ({n_sig} points): max |\u0394| = "
@@ -827,7 +845,8 @@ def fig7_concordance():
     fig.suptitle("RQ4  Coefficient concordance across label sources",
                  fontsize=12, fontweight="bold", x=0.005, ha="left")
     save(fig, "fig13_rq4_concordance",
-         "Each point is one colour \u00d7 PC fixed effect (15 per model); the shaded\n"
+         f"Each point is one colour \u00d7 PC fixed effect "
+         f"({len(colours) * len(pcs)} per model); the shaded\n"
          "corridor is \u00b10.02 around the identity line. Open markers are effects whose\n"
          "credible interval spans zero under at least one label source.")
 
