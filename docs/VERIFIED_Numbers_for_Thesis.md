@@ -26,28 +26,20 @@ Used by RQ4 label-sensitivity and the prediction task; **not** the published eco
 
 ## 1b. Ecology: n=1,174 clean vs n=1,438 primary
 
-> **⚠ PROVENANCE WARNING (audit 2026-09-15).** The **primary n=1,438** column in this
-> section and in §7d is fully reproducible and was re-verified against
-> `experiments/expansion/step06_outputs/` and `experiments/expansion/step08_outputs/`.
-> The **clean n=1,174** column is **not** reproducible from the current tree:
-> `step06_outputs_clean/` and `step08_outputs_clean/` were removed during repository
-> cleanup and no longer exist. Those numbers come from an earlier run.
+> **✅ BOTH COLUMNS VERIFIED (2026-09-21).** An audit on 2026-09-15 found that
+> `step06_outputs_clean/` and `step08_outputs_clean/` had been deleted in a repo
+> cleanup, leaving the **clean n=1,174** column citable but not reproducible. Both
+> directories have now been **regenerated from scratch** at the full chain length
+> (`sbatch scripts/slurm/run_06_08_clean_rerun.slurm`, job 48203773).
 >
-> - The clean-set **PC2** values are independently corroborated: the RQ4 `qwen7b`
->   label variant is the same n=1,174 set and gives WHITE~PC2 **+0.0718** (p=0.0003)
->   and YELLOW~PC2 **−0.0837** (p=0.0006), matching the values below to MCMC noise
->   (see `wp4_label_variants/results/wp4_fixed_effects_all_variants.csv`).
-> - The clean **χ² = 21.964, df = 8, p = 0.004982** has been **re-derived and
->   confirmed** (it is deterministic, no MCMC needed) by rerunning step 08 with
->   `ECOLOGY_SET=clean`, on n=1,174 species all of which have elevation.
-> - The clean-set **elevation MCMC** posterior means had no surviving source; a full
->   rerun is in progress (see below).
+> **Every clean-set number below reproduced exactly** — all three PC posterior means
+> and p-values, all three elevation slopes and p-values, and the χ². The historical
+> figures were correct; they were merely unverifiable. Minimum effective sample size
+> on the rebuilt clean PC models is 8,766.
 >
-> **Rerun:** steps 06 and 08 now accept `ECOLOGY_SET=clean`, which redirects I/O to
-> `step06_outputs_clean/` and `step08_outputs_clean/` and suppresses step 08's
-> publication into `Results/` so the primary n=1,438 figures are never overwritten.
-> Submit with `sbatch scripts/slurm/run_06_08_clean_rerun.slurm`. Until it lands,
-> **cite the n=1,438 column; treat the n=1,174 MCMC numbers as historical.**
+> Steps 06 and 08 now accept `ECOLOGY_SET=clean`, which redirects I/O to the clean
+> directories and suppresses step 08's publication into `Results/`, so a clean rerun
+> can never overwrite the published n=1,438 figures (verified by checksum).
 
 ### MCMCglmm colour × environmental PCs (genus random effect)
 
@@ -289,7 +281,9 @@ with genus controlled, WHITE declines and REDTYPE increases with elevation.
 Source: `Processed Data/experiments/reliability/summary.json`,
 `reliability_robustness_table.csv` (also mirrored under `Results/tables/reliability/`).
 Built by `scripts/24_Build_Reliability_Set.py` (join + categoriser v2 + validator)
-and `scripts/25_Reliability_Ecology.R` at `nitt=1,050,000` (matches step 06).
+and `scripts/25_Reliability_Ecology.R` at `nitt=1,050,000` (matches step 06), run as
+**3 independent chains** (seeds 42/123/456) with inference on the **pooled 30,000
+samples**. Convergence: `reliability_convergence.csv`.
 
 **These are v2-recode labels on the three-model overlap. They are NOT the published
 n=1,438 pipeline ecology table (§1) — do not merge the two.**
@@ -313,14 +307,40 @@ Colour counts — common: YELLOW 436 / WHITE 394 / REDTYPE 319; high-conf: 429 /
 
 ### Full-chain robustness (both subsets, genus RE, threshold MCMCglmm)
 
+Pooled posterior over 3 chains. Full precision in `reliability_mcmc_effects.csv`.
+
 | Effect | Common-known (n=1,149) | High-confidence (n=1,129) | Verdict |
 |---|---|---|---|
-| WHITE ~ PC2 | +0.067, p=0.003, CI excl. 0 | +0.071, p=0.002, CI excl. 0 | **robust** |
-| YELLOW ~ PC2 | −0.080, p=0.002, CI excl. 0 | −0.080, p=0.001, CI excl. 0 | **robust** |
-| REDTYPE ~ PC3 | −0.019, p=0.60 | −0.019, p=0.60 | same direction, CI incl. 0 |
+| WHITE ~ PC2 | +0.067, p=0.004, CI excl. 0 | +0.071, p=0.003, CI excl. 0 | **robust** |
+| YELLOW ~ PC2 | −0.080, p=0.001, CI excl. 0 | −0.080, p=0.001, CI excl. 0 | **robust** |
+| REDTYPE ~ PC3 | −0.020, p=0.58 | −0.019, p=0.60 | same direction, CI incl. 0 |
 | WHITE ~ elevation | −0.034, p=0.61 | −0.036, p=0.58 | same direction, CI incl. 0 |
-| YELLOW ~ elevation | +0.044, p=0.56 | +0.047, p=0.54 | same direction, CI incl. 0 |
-| REDTYPE ~ elevation | +0.007, p=0.92 | +0.011, p=0.87 | same direction, CI incl. 0 |
+| YELLOW ~ elevation | +0.044, p=0.56 | +0.048, p=0.53 | same direction, CI incl. 0 |
+| REDTYPE ~ elevation | +0.008, p=0.91 | +0.011, p=0.88 | same direction, CI incl. 0 |
+
+### Convergence (added 2026-09-21)
+
+Source: `reliability_convergence.csv` (mirrored under `Results/tables/reliability/`);
+per-model trace plots in `experiments/reliability/figures/trace_*.png`.
+
+| Diagnostic | Value |
+|---|---|
+| Chains per model (seeds 42/123/456) | 3 |
+| Pooled posterior samples per model | 30,000 |
+| **Worst Gelman-Rubin MPSRF** (all 12 models) | **1.000425** |
+| Worst per-parameter PSRF | 1.000249 |
+| **Lowest pooled effective sample size** | **29,380** of 30,000 |
+| Models meeting MPSRF < 1.01 | **12 / 12** |
+
+**Correct claim:** all reliability models converged — worst MPSRF 1.0004 against the
+conventional 1.01 threshold, and effective sample sizes within 2% of the nominal
+30,000, i.e. the chains are near-independent. This matches the diagnostics reported
+for step 06 and for RQ4 (worst MPSRF 1.00053), so every MCMC result in the thesis now
+carries multi-chain convergence evidence.
+
+Moving from one chain to three shifted the posterior means by at most 0.0006 and left
+**every robustness designation unchanged**, so the conclusions do not depend on chain
+count.
 
 **Correct claim:** WHITE~PC2 (+) and YELLOW~PC2 (−) survive restriction to species
 where all three open models agree on a known colour plus a source-text check — i.e.
