@@ -59,6 +59,7 @@ python -m venv .venv_figs && .venv_figs/bin/pip install matplotlib numpy pandas 
 # 22 now publishes straight into Results/figures/methods/ (no manual copy step)
 .venv_figs/bin/python scripts/22_Build_Method_Figures.py
 .venv_figs/bin/python scripts/21_Predict_Colour_from_Env.py
+# 23 publishes fig14 into Results/figures/methods/ (same as 22)
 .venv_figs/bin/python scripts/23_Build_Prediction_Figure.py
 ```
 

@@ -26,7 +26,7 @@ EXP = ROOT / "Processed Data" / "experiments"
 REL = EXP / "reliability"
 
 # ---------------------------------------------------------------- expected values
-E_CORPUS = {"treatments": 3857, "with_description": 3230}
+E_CORPUS = {"treatments": 3857, "with_description": 3230, "known_colour_original": 1674}
 E_ECOLOGY = {"primary_n": 1438, "primary": {"WHITE": 613, "YELLOW": 494, "REDTYPE": 331},
              "clean_n": 1174, "clean": {"WHITE": 502, "YELLOW": 428, "REDTYPE": 244}}
 E_GOLD = {"template": 100, "labelled": 98, "junk": 9, "n89": 89}
@@ -164,6 +164,15 @@ same("ecology", "primary colours", dict(Counter(r["color_group"] for r in prim))
 clean = read(EXP / "step05b_outputs_clean/species_color_environment_final_clean.csv")
 same("ecology", "clean n", len(clean), E_ECOLOGY["clean_n"])
 same("ecology", "clean colours", dict(Counter(r["color_group"] for r in clean)), E_ECOLOGY["clean"])
+# fig5 used to unique() a missing binomial column and report 994 / 424. Guard that.
+csp = read(EXP / "clean_species_only.csv")
+known_cats = {"WHITE", "YELLOW", "RED", "PINK", "PURPLE/BLUE"}
+n_known = sum(1 for r in csp if r.get("color_category") in known_cats)
+same("ecology", "known colour on original extracts (fig5)", n_known,
+     E_CORPUS["known_colour_original"])
+same("ecology", "fig5 funnel is monotonic until expansion",
+     E_CORPUS["treatments"] > E_CORPUS["with_description"] > n_known > E_ECOLOGY["clean_n"]
+     and E_ECOLOGY["primary_n"] > E_ECOLOGY["clean_n"], True)
 
 # ------------------------------------------------------------- 3 gold + benchmark
 section("Gold set / RQ1 / RQ3")

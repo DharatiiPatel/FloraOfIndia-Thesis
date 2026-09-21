@@ -1,1 +1,17 @@
-/scratch/dp23301/Thesis/Processed Data/experiments/expansion/step08_outputs/elevation_analysis_summary.txt
+Elevation Gradient Analysis — Primary Analysis Summary
+==================================================
+Date: 2026-08-14 16:46:54.232819
+Species analysed: 1438
+Elevation range (m): 12 - 4901
+SKIP_ELEV_MCMC: TRUE
+
+Chi-square (colour x band):
+
+	Pearson's Chi-squared test
+
+data:  chi_tab
+X-squared = 31.246, df = 8, p-value = 0.000127
+
+
+Outputs under Processed Data/experiments/expansion/step08_outputs/
+(internal path name retained; this is the primary analysis set, n=1,438)

@@ -253,44 +253,46 @@ save_fig(file.path(fig_dir, "fig4_convergence.png"), p4, 10.5, 4.0, dpi = 300)
 # ── Figure 5: pipeline summary ───────────────────────────────────────────────
 message("Figure 5: Pipeline summary...")
 
+# Honest, comparable counts — do NOT unique() a missing `binomial` column
+# (clean_species_only.csv has genus+epithet only; the old code silently
+# counted just the 1,000-row expansion file and drew 994 / 424 / 1,454).
 treatments_f <- file.path(primary_exp, "species_descriptions_treatments.csv")
-new_desc_f   <- file.path(exp_root, "new_descriptions_for_extract.csv")
 clean_sp_f   <- file.path(primary_exp, "clean_species_only.csv")
-new_col_f    <- file.path(exp_root, "color_categories_new.csv")
-occ_f        <- file.path(exp_root, "gbif_outputs/gbif_occurrences_combined.csv")
+clean_final_f <- file.path(primary_exp, "step05b_outputs_clean/species_color_environment_final_clean.csv")
 
-n_parsed_primary <- if (file.exists(treatments_f)) nrow(read.csv(treatments_f)) else NA_integer_
-n_parsed_new     <- if (file.exists(new_desc_f)) nrow(read.csv(new_desc_f)) else 0L
-n_parsed         <- sum(n_parsed_primary, n_parsed_new, na.rm = TRUE)
+df_tr <- read.csv(treatments_f, encoding = "UTF-8")
+n_treatments <- nrow(df_tr)
+n_described  <- if ("has_description" %in% names(df_tr)) {
+  sum(toupper(as.character(df_tr$has_description)) %in% c("TRUE", "1", "YES"))
+} else {
+  sum(nzchar(as.character(df_tr$raw_text)))
+}
 
-# Species-level colour records: earlier clean extracts + recovered/fascicle additions
-df_clean <- if (file.exists(clean_sp_f)) read.csv(clean_sp_f) else data.frame()
-df_new   <- if (file.exists(new_col_f)) read.csv(new_col_f) else data.frame()
-n_species <- length(unique(c(
-  if (nrow(df_clean)) df_clean$binomial else character(),
-  if (nrow(df_new)) df_new$binomial else character()
-)))
-
+df_clean_sp <- read.csv(clean_sp_f, encoding = "UTF-8")
+if (!"binomial" %in% names(df_clean_sp) || all(!nzchar(as.character(df_clean_sp$binomial)))) {
+  df_clean_sp$binomial <- trimws(paste(df_clean_sp$genus, df_clean_sp$epithet))
+}
 known_cats <- c("WHITE", "YELLOW", "RED", "PINK", "PURPLE/BLUE")
-n_known <- length(unique(c(
-  if (nrow(df_clean)) df_clean$binomial[df_clean$color_category %in% known_cats] else character(),
-  if (nrow(df_new)) df_new$binomial[df_new$color_category %in% known_cats] else character()
-)))
-
-# Unique GBIF-matched binomials (query_name) without loading 1.8M rows into R
-n_gbif <- as.integer(system(paste(
-  "tail -n +2", shQuote(occ_f), "| cut -d, -f1 | sed 's/\"//g' | sort -u | wc -l"
-), intern = TRUE))
+n_known <- length(unique(df_clean_sp$binomial[df_clean_sp$color_category %in% known_cats &
+                                              nzchar(df_clean_sp$binomial)]))
+n_clean_linked <- if (file.exists(clean_final_f)) nrow(read.csv(clean_final_f)) else NA_integer_
 
 pipe_df <- tibble(
-  stage = c("Parsed text blocks", "Species-level records", "Known flower colour",
-            "GBIF matched", "Final analysis set"),
-  n     = c(n_parsed, n_species, n_known, n_gbif, n_analysis)
+  stage = c("Unique treatments",
+            "With morphological description",
+            "Known flower colour (original extracts)",
+            "Environment-linked (clean set)",
+            "Primary analysis set (+ expansion)"),
+  n     = c(n_treatments, n_described, n_known, n_clean_linked, n_analysis)
 )
+stopifnot(identical(as.integer(pipe_df$n), c(3857L, 3230L, 1674L, 1174L, 1438L)))
 
 p5 <- plot_pipeline(pipe_df) +
   labs(title = "Species retention through the analysis pipeline",
-       caption = n_subtitle)
+       caption = paste0(
+         n_subtitle,
+         ". Last bar is larger than the clean set because fascicle/recovery extracts were added."
+       ))
 save_fig(file.path(fig_dir, "fig5_pipeline_summary.png"), p5, 8.6, 4.4, dpi = 300)
 
 # Compact coefficient plot (artefact name kept for path stability)

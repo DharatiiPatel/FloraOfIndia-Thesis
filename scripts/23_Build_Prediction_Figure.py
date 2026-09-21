@@ -15,12 +15,14 @@ Panel C  permutation importance. Message: PC2 alone carries the signal, which
 
 READS : Processed Data/experiments/prediction_outputs/
 WRITES: Processed Data/experiments/figures/fig14_prediction.{png,pdf}
+        and Results/figures/methods/ (same publish step as script 22)
 """
 
 from __future__ import annotations
 
 import json
 import os
+import shutil
 from pathlib import Path
 
 os.environ.setdefault("MPLCONFIGDIR", "/tmp/mplconfig")
@@ -203,11 +205,16 @@ def main():
         ha="left", va="bottom", fontsize=8.2, color=MUTED,
     )
 
+    publish = BASE / "Results" / "figures" / "methods"
+    publish.mkdir(parents=True, exist_ok=True)
     for ext in ("png", "pdf"):
         fig.savefig(OUT / f"fig14_prediction.{ext}", dpi=400,
                     facecolor="white", bbox_inches=None)
+        shutil.copyfile(OUT / f"fig14_prediction.{ext}",
+                        publish / f"fig14_prediction.{ext}")
     plt.close(fig)
     print(f"Saved {OUT}/fig14_prediction.png and .pdf")
+    print(f"Published to {publish}")
 
 
 if __name__ == "__main__":

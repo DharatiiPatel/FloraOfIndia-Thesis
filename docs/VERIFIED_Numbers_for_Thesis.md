@@ -12,7 +12,7 @@ Source: `Processed Data/experiments/expansion/step05b_outputs/species_color_envi
 Figures: `Results/figures/` synced by `scripts/07_Generate_Figures.R`.  
 The earlier n=1,174 ecology outputs remain under `Processed Data/experiments/` (not published figures).
 
-### Prior clean set (historical / RQ4 / prediction)
+### Prior clean set (historical / RQ4 only)
 
 | Quantity | Exact value |
 |---|---:|
@@ -20,7 +20,9 @@ The earlier n=1,174 ecology outputs remain under `Processed Data/experiments/` (
 | WHITE / YELLOW / REDTYPE | 502 / 428 / 244 |
 
 Source: `Processed Data/experiments/step05b_outputs_clean/species_color_environment_final_clean.csv`  
-Used by RQ4 label-sensitivity and the prediction task; **not** the published ecology figure set.
+Used by **RQ4 label-sensitivity** (the four label-source variants sit on this
+n=1,174 environment table). **Not** the published ecology figure set, and **not**
+the prediction task — prediction was refreshed on the primary n=1,438 set (§7c).
 
 ---
 

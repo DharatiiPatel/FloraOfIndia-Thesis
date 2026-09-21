@@ -157,14 +157,18 @@ plot_convergence <- function(gr) {
 #' @param pipe data frame with columns stage (ordered factor) and n
 plot_pipeline <- function(pipe) {
   start <- pipe$n[1]
+  prev <- c(NA_real_, pipe$n[-length(pipe$n)])
   d <- pipe %>%
     mutate(
       pct_of_start = 100 * n / start,
-      kept         = c(NA, 100 * n[-1] / n[-length(n)]),
+      kept         = 100 * n / prev,
       label        = ifelse(
-        is.na(kept),
+        is.na(prev),
         sprintf("%s", comma(n)),
-        sprintf("%s   %.0f%% of previous", comma(n), kept)),
+        ifelse(n > prev,
+               sprintf("%s   +%s vs previous", comma(n), comma(n - prev)),
+               sprintf("%s   %.0f%% of previous", comma(n), kept))
+      ),
       stage = factor(stage, levels = rev(levels(factor(stage, levels = stage))))
     )
 
