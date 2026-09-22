@@ -46,8 +46,7 @@ BURNIN  <- 50000     # burn-in
 THIN    <- 100       # thinning interval
 # Effective samples = (1050000 - 50000) / 100 = 10000
 
-# MCMC_SMOKE=1 runs absurdly short chains to test the I/O path only. Never use
-# it for reported results; published numbers use the values above.
+# MCMC_SMOKE=1 runs short chains to test I/O only. Do not use for reported results.
 if (identical(Sys.getenv("MCMC_SMOKE", ""), "1")) {
   NITT <- 1300; BURNIN <- 300; THIN <- 10
   message("*** MCMC_SMOKE=1: short chains, results are NOT publishable ***")
@@ -198,7 +197,6 @@ save_model_results <- function(model, label, output_dir) {
   return(fixed_df)
 }
 
-#Run main models 
 colors_to_run <- list(
   list(col = "is_white",   label = "WHITE"),
   list(col = "is_yellow",  label = "YELLOW"),

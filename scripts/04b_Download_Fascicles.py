@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Download all 24 BSI Fascicles of Flora of India PDFs into raw_data/fascicles/.
+Download BSI Fascicles of Flora of India PDFs into raw_data/fascicles/.
 
-Lightweight network I/O only. Skips files that already exist and look complete
-(>100 KB). Source page: http://bsi.gov.in/page/en/fascicles-of-flora-of-india
+Skips files that already exist and look complete (>100 KB).
+Source: http://bsi.gov.in/page/en/fascicles-of-flora-of-india
 
 Usage:  python scripts/04b_Download_Fascicles.py
 """
@@ -25,7 +25,6 @@ URL_BASE = (
     "books/fascicles_of_flora_of_India_latest/"
 )
 MIN_BYTES = 100_000
-
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
@@ -71,7 +70,6 @@ def main():
     print(f"\ndone: downloaded={ok} skipped={skip} failed={fail}")
     if fail:
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()

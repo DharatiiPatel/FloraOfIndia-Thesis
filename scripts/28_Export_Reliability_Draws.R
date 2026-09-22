@@ -1,13 +1,8 @@
 #!/usr/bin/env Rscript
-# Export thinned posterior draws of the focal effects from the reliability chains so
-# the appendix convergence figure (fig18) can be built in Python alongside fig15-17.
-#
-# Reads  : Processed Data/experiments/reliability/chains_<subset>_<COLOUR>_<kind>.rds
-#          (written by scripts/25_Reliability_Ecology.R; a list of per-chain Sol matrices)
-#          plus reliability_mcmc_effects.csv to learn which effect is focal per model.
+# Export thinned posterior draws of focal reliability effects for fig18.
+# Reads  : Processed Data/experiments/reliability/chains_*.rds
+#          Processed Data/experiments/reliability/reliability_mcmc_effects.csv
 # Writes : Processed Data/experiments/reliability/reliability_chain_draws.csv
-#
-# Cheap and read-only with respect to the MCMC: safe to re-run without refitting.
 
 args_all <- commandArgs(trailingOnly = FALSE)
 file_arg <- sub("^--file=", "", args_all[grepl("^--file=", args_all)])
@@ -16,7 +11,7 @@ root <- if (length(file_arg) != 1) getwd() else dirname(dirname(normalizePath(fi
 options(stringsAsFactors = FALSE)
 
 REL <- file.path(root, "Processed Data/experiments/reliability")
-THIN_TO <- 1000   # points per chain in the figure; plenty for a trace panel
+THIN_TO <- 1000   # points per chain in the figure
 
 effects <- read.csv(file.path(REL, "reliability_mcmc_effects.csv"))
 

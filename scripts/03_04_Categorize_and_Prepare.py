@@ -1,18 +1,10 @@
 #!/usr/bin/env python3
 """
-Steps 03 + 04 for the CLEAN (treatment-parser) pipeline, combined.
+Categorise Qwen colour phrases and emit a species-only table for GBIF.
 
-Because the treatment parser already produced clean genus/epithet, we categorise
-the Qwen colour output AND emit a step04-style "species_only" file in one pass.
-
-SAFE BY DESIGN:
-  READS  : Processed Data/experiments/flower_color_qwen_clean.csv
-  WRITES : Processed Data/experiments/clean_color_categories.csv   (all rows)
-           Processed Data/experiments/clean_species_only.csv       (input for 05a)
-  Pipeline untouched.
-
-The categorize_color() logic is IDENTICAL to the original
-03_Categorize_Flower_color.py so results are comparable to the original run.
+Reads  : Processed Data/experiments/flower_color_qwen_clean.csv
+Writes : Processed Data/experiments/clean_color_categories.csv
+         Processed Data/experiments/clean_species_only.csv  (input for 05a)
 """
 
 import csv
@@ -22,7 +14,6 @@ BASE = Path("/scratch/dp23301/Thesis")
 IN = BASE / "Processed Data" / "experiments" / "flower_color_qwen_clean.csv"
 OUT_ALL = BASE / "Processed Data" / "experiments" / "clean_color_categories.csv"
 OUT_SPP = BASE / "Processed Data" / "experiments" / "clean_species_only.csv"
-
 
 def categorize_color(text: str) -> str:
     if not text or text.strip() == "":
@@ -43,7 +34,6 @@ def categorize_color(text: str) -> str:
     if "no flower colour" in t:
         return "UNKNOWN"
     return "OTHER"
-
 
 def main():
     rows = list(csv.DictReader(IN.open(encoding="utf-8")))
@@ -88,7 +78,6 @@ def main():
     print(f"\nKnown-colour species (go to GBIF): {known}")
     print(f"Wrote: {OUT_ALL}")
     print(f"Wrote: {OUT_SPP}")
-
 
 if __name__ == "__main__":
     main()

@@ -1,24 +1,18 @@
 #!/usr/bin/env python3
 """
-Build the expansion analysis inputs from recovered + fascicle colour extracts.
+Build expansion analysis inputs from recovered and fascicle colour extracts.
 
-Does NOT modify clean_color_categories.csv / step05b_outputs_clean / n=1174.
+Does not modify clean_color_categories.csv or step05b_outputs_clean.
 All outputs go under Processed Data/experiments/expansion/.
 
-Steps:
-  1. Merge recovered + fascicle description rows into one extract input
-     (if flower_color_new.csv is missing - the GPU job reads this file)
-  2. After colours exist: categorise, identify NEW colour-bearing binomials
-     not already in the primary analysis table, write GBIF input for those only
-
-  READS  : recovered_descriptions_for_extract.csv (from 04c)
-           expansion/fascicle_descriptions.csv (from 04e)
-           expansion/flower_color_new.csv (from GPU extract, when present)
-           step05b_outputs_clean/species_color_environment_final_clean.csv
-  WRITES : expansion/new_descriptions_for_extract.csv
-           expansion/color_categories_new.csv
-           expansion/species_for_gbif_new.csv
-           expansion/build_summary.json
+Reads  : recovered_descriptions_for_extract.csv
+         expansion/fascicle_descriptions.csv
+         expansion/flower_color_new.csv (when present)
+         step05b_outputs_clean/species_color_environment_final_clean.csv
+Writes : expansion/new_descriptions_for_extract.csv
+         expansion/color_categories_new.csv
+         expansion/species_for_gbif_new.csv
+         expansion/build_summary.json
 
 Usage:
   python scripts/04g_Build_Analysis_Set.py --stage extract-input
@@ -43,7 +37,6 @@ KNOWN = {"WHITE", "YELLOW", "RED", "PINK", "PURPLE/BLUE"}
 
 csv.field_size_limit(sys.maxsize)
 
-
 def categorize_color(text: str) -> str:
     if not text or not text.strip():
         return "UNKNOWN"
@@ -64,14 +57,12 @@ def categorize_color(text: str) -> str:
         return "GREENISH"
     return "OTHER"
 
-
 def write_csv(path: Path, rows: list[dict]):
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         w.writeheader()
         w.writerows(rows)
-
 
 def stage_extract_input():
     OUTDIR.mkdir(parents=True, exist_ok=True)
@@ -104,7 +95,6 @@ def stage_extract_input():
     by = Counter(r["source"] for r in rows)
     print("by source:", dict(by))
     return out
-
 
 def stage_gbif_input():
     colours = OUTDIR / "flower_color_new.csv"
@@ -168,7 +158,6 @@ def stage_gbif_input():
     print(json.dumps(summary, indent=2))
     print(f"wrote species_for_gbif_new.csv ({len(new_for_gbif)} NEW colour-bearing species)")
 
-
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--stage", required=True,
@@ -178,7 +167,6 @@ def main():
         stage_extract_input()
     else:
         stage_gbif_input()
-
 
 if __name__ == "__main__":
     main()

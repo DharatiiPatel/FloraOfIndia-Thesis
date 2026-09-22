@@ -1,9 +1,6 @@
 #!/usr/bin/env Rscript
-# WP4 harness -- STEP 3: combine the parallel MCMC chains into the sensitivity table.
-# For each (variant x colour): Gelman-Rubin convergence across the 3 chains, pooled
-# posterior summaries (post.mean, 95% CI, pMCMC), and a cross-variant comparison of
-# which colour~environment associations are significant. This is the RQ4 result:
-# "does extraction quality change the ecological conclusions?"
+# Combine parallel MCMC chains into the label-sensitivity table.
+# Per (variant x colour): Gelman-Rubin across 3 chains and pooled posterior summaries.
 
 .libPaths(c("~/R/library", .libPaths()))
 options(stringsAsFactors = FALSE)
@@ -19,7 +16,7 @@ dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
 man <- read.csv(MANIFEST)
 combos <- unique(man[, c("variant", "color_label")])
 
-pmcmc <- function(x) {  # MCMCglmm convention
+pmcmc <- function(x) {
   2 * min(mean(x > 0), mean(x < 0))
 }
 
@@ -35,17 +32,15 @@ for (i in seq_len(nrow(combos))) {
     message("SKIP (missing chains): ", variant, " / ", color)
     next
   }
-  chains <- lapply(files, readRDS)              # each is an mcmc matrix (Sol)
+  chains <- lapply(files, readRDS)
   ml <- as.mcmc.list(lapply(chains, as.mcmc))
 
-  # Gelman-Rubin
   gr <- tryCatch(gelman.diag(ml, multivariate = TRUE, autoburnin = FALSE),
                  error = function(e) NULL)
   mpsrf <- if (!is.null(gr)) gr$mpsrf else NA
   converge_rows[[length(converge_rows) + 1]] <-
     data.frame(variant = variant, color = color, mpsrf = mpsrf)
 
-  # pooled posterior
   pooled <- do.call(rbind, chains)
   for (v in colnames(pooled)) {
     x <- pooled[, v]
@@ -65,7 +60,6 @@ conv  <- do.call(rbind, converge_rows)
 write.csv(fixed, file.path(OUTDIR, "wp4_fixed_effects_all_variants.csv"), row.names = FALSE)
 write.csv(conv,  file.path(OUTDIR, "wp4_convergence.csv"), row.names = FALSE)
 
-# Cross-variant comparison of SIGNIFICANT associations (excluding intercept)
 sig <- fixed[fixed$significant & fixed$variable != "(Intercept)", ]
 message("\n=== SIGNIFICANT colour~environment associations by variant ===")
 if (nrow(sig) == 0) {
@@ -83,7 +77,6 @@ if (nrow(sig) == 0) {
   }
 }
 
-# Compact wide comparison: does each variant reproduce the headline PC2 findings?
 message("\n=== Headline check (WHITE~PC2 should be +, YELLOW~PC2 should be -) ===")
 for (vn in unique(fixed$variant)) {
   wp2 <- fixed[fixed$variant == vn & fixed$color == "WHITE"  & fixed$variable == "PC2", ]

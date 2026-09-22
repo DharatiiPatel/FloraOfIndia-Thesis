@@ -1,7 +1,6 @@
 #!/usr/bin/env Rscript
 # GBIF fetch for species added by fascicles/recovery (04g).
-# Reuses the existing GBIF cache. Writes under experiments/expansion/
-# (internal folder name; this is the primary n=1,438 pipeline).
+# Reuses the existing GBIF cache. Writes under experiments/expansion/.
 
 .libPaths(c("~/R/library", .libPaths()))
 options(stringsAsFactors = FALSE)
@@ -93,7 +92,6 @@ for (i in seq_len(nrow(df_unique))) {
 }
 if (length(failed)) writeLines(failed, failed_log)
 
-# Assemble NEW occurrences with colour columns
 parts <- list()
 for (i in seq_len(nrow(df_unique))) {
   sp <- df_unique$binomial[i]

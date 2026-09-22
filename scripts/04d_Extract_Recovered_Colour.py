@@ -33,7 +33,6 @@ SYSTEM_MESSAGE = (
     "'no flower colour mentioned'. Do NOT add explanations."
 )
 
-
 def resolve_model_path(model_id: str) -> str:
     """Prefer local HF snapshot so offline compute nodes can load the model."""
     if Path(model_id).is_dir():
@@ -47,7 +46,6 @@ def resolve_model_path(model_id: str) -> str:
                 return str(d)
     return model_id
 
-
 def load_model_and_tokenizer():
     path = resolve_model_path(MODEL_NAME)
     tokenizer = AutoTokenizer.from_pretrained(path, trust_remote_code=True)
@@ -59,7 +57,6 @@ def load_model_and_tokenizer():
     )
     model.eval()
     return tokenizer, model
-
 
 def infer_flower_color(tokenizer, model, description: str) -> str:
     desc = (description or "")[:MAX_DESC_CHARS]
@@ -81,7 +78,6 @@ def infer_flower_color(tokenizer, model, description: str) -> str:
     generated_ids = outputs[0][inputs.shape[-1]:]
     return tokenizer.decode(generated_ids, skip_special_tokens=True).strip()
 
-
 def already_done_ids(path: Path) -> set[str]:
     done = set()
     if path.exists():
@@ -89,7 +85,6 @@ def already_done_ids(path: Path) -> set[str]:
             for row in csv.DictReader(f):
                 done.add(row.get("species_id", ""))
     return done
-
 
 def main():
     if not INPUT_CSV.exists():
@@ -126,7 +121,6 @@ def main():
             if count % 25 == 0:
                 print(f"Processed {count} ...", flush=True)
     print(f"DONE. Processed {count} new. Output: {OUTPUT_CSV}", flush=True)
-
 
 if __name__ == "__main__":
     main()

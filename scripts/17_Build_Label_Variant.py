@@ -1,32 +1,15 @@
 #!/usr/bin/env python3
 """
-WP4 (downstream-impact) harness -- STEP 1.
+Swap a model's colour labels onto the existing environment/PCA table.
 
-Build a per-label-source analysis dataset for the sensitivity analysis:
-"Do the ecological conclusions change depending on which model produced the
-flower-colour labels?"
+PC scores are label-independent, so GBIF/rasters/PCA are not re-run.
+Species this source calls UNKNOWN/OTHER are dropped.
 
-Key efficiency: the ENVIRONMENT is label-independent. Every species' PC1-PC10
-scores come from GBIF occurrences + climate/soil and do NOT depend on the colour
-label. So we REUSE the existing clean environment dataset and only swap in each
-model's colour assignment. No GBIF/rasters/PCA re-run needed.
+Reads  : treatments + step05b_outputs_clean environment table + --preds
+Writes : Processed Data/experiments/wp4_label_variants/species_color_environment_<variant>.csv
 
-For a given model's treatment-level predictions we:
-  1. categorise the predicted free text (same rule as the pipeline),
-  2. group RED/PINK/PURPLE-BLUE -> REDTYPE,
-  3. map species_id -> binomial via the treatments file,
-  4. join onto the clean environment dataset by binomial (== query_name),
-  5. KEEP species this source gives a known colour; DROP species it calls
-     UNKNOWN/OTHER (exactly as the real pipeline drops unknown-colour species),
-  6. write a dataset with the SAME PC columns but this source's colour_group.
-
-Output feeds the MCMCglmm job array (19_MCMCglmm_Array.R).
-
-Usage
------
-  python 17_Build_Label_Variant.py \
-      --preds "Processed Data/experiments/benchmark/treatments_pred_baseline.csv" \
-      --variant baseline
+Usage:
+  python 17_Build_Label_Variant.py --preds PATH.csv --variant baseline
 """
 
 import argparse
@@ -43,7 +26,6 @@ OUTDIR = EXP / "wp4_label_variants"
 csv.field_size_limit(sys.maxsize)
 
 PC_COLS = [f"PC{i}" for i in range(1, 11)]
-
 
 def categorize_color(text: str) -> str:
     if not text or text.strip() == "":
@@ -65,7 +47,6 @@ def categorize_color(text: str) -> str:
         return "UNKNOWN"
     return "OTHER"
 
-
 def to_group(cat: str):
     if cat == "WHITE":
         return "WHITE"
@@ -73,13 +54,11 @@ def to_group(cat: str):
         return "YELLOW"
     if cat in ("RED", "PINK", "PURPLE/BLUE"):
         return "REDTYPE"
-    return None  # UNKNOWN / OTHER / GREENISH -> dropped (no known colour)
-
+    return None  # UNKNOWN / OTHER / GREENISH are dropped
 
 def resolve(p: str) -> Path:
     q = Path(p)
     return q if q.is_absolute() else BASE / q
-
 
 def main():
     ap = argparse.ArgumentParser()
@@ -90,12 +69,10 @@ def main():
 
     OUTDIR.mkdir(parents=True, exist_ok=True)
 
-    # species_id -> binomial
     with open(TREATMENTS, encoding="utf-8") as f:
         sid_to_binomial = {r["species_id"]: r["binomial"].strip()
                            for r in csv.DictReader(f)}
 
-    # binomial -> colour_group under THIS source
     preds_path = resolve(args.preds)
     with open(preds_path, encoding="utf-8-sig") as f:
         preds = list(csv.DictReader(f))
@@ -151,7 +128,6 @@ def main():
     print(f"  colour FLIPPED vs Qwen-7B base: {n_flipped}")
     print(f"  distribution                  : {dict(dist)}")
     print(f"  wrote                         : {out_path}")
-
 
 if __name__ == "__main__":
     main()

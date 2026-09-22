@@ -5,17 +5,21 @@ from pathlib import Path
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
+"""
+Extract flower colour from treatment descriptions with Qwen2.5-7B-Instruct.
+
+Reads  : Processed Data/experiments/species_descriptions_treatments.csv
+Writes : Processed Data/experiments/flower_color_qwen_clean.csv
+"""
 
 BASE_DIR = Path("/scratch/dp23301/Thesis")
 
-# NEW clean input (treatment parser output) -> experiments output. Pipeline untouched.
 INPUT_CSV = BASE_DIR / "Processed Data" / "experiments" / "species_descriptions_treatments.csv"
 OUTPUT_CSV = BASE_DIR / "Processed Data" / "experiments" / "flower_color_qwen_clean.csv"
 
 MODEL_NAME = "Qwen/Qwen2.5-7B-Instruct"
 MAX_NEW_TOKENS = 32
 
-# IDENTICAL prompt to the original step 02 (baseline) so results are comparable.
 SYSTEM_MESSAGE = (
     "You are an expert botanist. Your ONLY job is to extract the flower colour "
     "from Flora of India species descriptions. "
@@ -23,7 +27,6 @@ SYSTEM_MESSAGE = (
     "'flowers blue or purple', etc. If flower colour is not mentioned, return exactly "
     "'no flower colour mentioned'. Do NOT add explanations."
 )
-
 
 def load_model_and_tokenizer():
     token_kwargs = {}
@@ -42,7 +45,6 @@ def load_model_and_tokenizer():
     )
     model.eval()
     return tokenizer, model
-
 
 def infer_flower_color(tokenizer, model, description: str) -> str:
     messages = [
@@ -63,7 +65,6 @@ def infer_flower_color(tokenizer, model, description: str) -> str:
     generated_ids = outputs[0][inputs.shape[-1]:]
     return tokenizer.decode(generated_ids, skip_special_tokens=True).strip()
 
-
 def already_done_ids(path: Path):
     """Resume support: return set of species_id already written."""
     done = set()
@@ -72,7 +73,6 @@ def already_done_ids(path: Path):
             for row in csv.DictReader(f):
                 done.add(row.get("species_id", ""))
     return done
-
 
 def main():
     if not INPUT_CSV.exists():
@@ -111,7 +111,6 @@ def main():
                 print(f"Processed {count} new species...", flush=True)
 
     print(f"DONE. Processed {count} new species. Output: {OUTPUT_CSV}")
-
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,6 @@
 #!/usr/bin/env Rscript
-# Combine earlier GBIF occurrences with newly fetched ones, then environment
-# linking + PCA. Writes the primary analysis table (n=1,438) under
-# experiments/expansion/step05b_outputs/ (internal folder name retained).
+# Combine GBIF occurrence tables, extract environment, and run PCA.
+# Writes the primary analysis table under experiments/expansion/step05b_outputs/.
 
 .libPaths(c("~/R/library", .libPaths()))
 options(stringsAsFactors = FALSE)

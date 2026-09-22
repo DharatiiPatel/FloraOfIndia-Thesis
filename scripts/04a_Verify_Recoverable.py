@@ -1,33 +1,16 @@
 #!/usr/bin/env python3
 """
-Prove (or disprove) that species were actually lost to parsing.
+Locate lost-species treatments in volume text and check whether they name a colour.
 
-28_Diagnose_Unknown_Colour.py (archived) estimated that 758 species were dropped because
-their description was mis-parsed rather than because the Flora omits colour.
-That was inference from what the pipeline produced. This script tests it
-against the source: it goes back to the OCR'd volume text, locates each lost
-species' treatment, and checks whether the treatment states a flower colour.
+A species counts as recoverable if it is UNKNOWN from a parse failure, its
+treatment can be located, and that treatment names a colour on a flower organ.
+The locator scores every binomial occurrence and rejects index-like windows.
+A control pass on known-colour species reports whether the locator is trustworthy.
 
-A species only counts as lost if all three hold:
-  1. it is currently UNKNOWN and diagnosed as a parsing failure,
-  2. its treatment can be located in the raw volume text, and
-  3. that treatment names a colour on a flower organ.
-
-Locating the treatment is the same problem that caused the loss, so it is done
-carefully. A binomial can appear many times in a volume - in the index, in a
-key, in another species' synonymy - and only one of those is the treatment.
-Every occurrence is scored on the morphological content of the text following
-it, and the best-scoring window wins. Occurrences that look like index runs
-are rejected outright.
-
-CONTROL: the same locator is run on species whose colour the pipeline already
-found. If it cannot reproduce those known colours it is not trustworthy on the
-lost ones, so that agreement rate is reported first and gates the result.
-
-  READS  : raw_data/FLORA OF INDIA VOL.*.txt
-           Processed Data/experiments/unknown_diagnosis.csv
-                                      clean_color_categories.csv
-  WRITES : Processed Data/experiments/recoverable_verified.csv
+Reads  : raw_data/FLORA OF INDIA VOL.*.txt
+         Processed Data/experiments/unknown_diagnosis.csv
+         Processed Data/experiments/clean_color_categories.csv
+Writes : Processed Data/experiments/recoverable_verified.csv
 
 Usage:  python 04a_Verify_Recoverable.py [--limit 400] [--control 150]
 """
@@ -85,10 +68,7 @@ def looks_like_index(window: str) -> bool:
     return digits > len(window[:400]) * 0.22
 
 
-    # A new numbered treatment, or a figure caption, ends the current one. Without
-# this the window runs into the next species and picks up its colour - the
-# first version of this script scored Myricaria squamosa WHITE from the text of
-# Myricaria albiflora sitting directly below it.
+    # Cut the window at the next numbered treatment, figure caption, or family heading.
 BOUNDARY = re.compile(
     r"(\n\s*\d{1,3}\s*\.\s+[A-Z][a-z]{2,}\s+[a-z]{3,})"      # '2. Myricaria davurica'
     r"|(\bFig\s*\.?\s*\d+)"                                    # figure caption
@@ -160,10 +140,7 @@ def main():
 
     rng = random.Random(args.seed)
 
-    # ---- CONTROL: can the locator reproduce colours we already have? ----
-    # The real test is not whether a colour is present but whether it is the
-    # RIGHT one. A window that has drifted into the next species will still
-    # contain a colour, so 'found a colour' proves nothing on its own.
+    # Control: agreement with already-known colours, not merely finding a colour word.
     import importlib.util
     spec = importlib.util.spec_from_file_location("c2", BASE / "scripts" / "14_Categorize_v2.py")
     c2 = importlib.util.module_from_spec(spec)
@@ -199,7 +176,6 @@ def main():
             print("     Treat the recoverable count as an upper bound, not a result.")
     print()
 
-    # ---- TEST: the species we believe were lost ----
     pool = lost if args.limit == 0 else rng.sample(lost, min(args.limit, len(lost)))
     rows, causes = [], Counter()
     for r in pool:

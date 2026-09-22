@@ -1,33 +1,12 @@
 #!/usr/bin/env python3
 """
-Prediction task: can flower colour be predicted from environment alone?
+Predict flower colour from environment; headline numbers use genus-grouped CV.
 
-The MCMCglmm analysis answers whether colour-environment associations are
-statistically detectable. That is a different question from whether the signal
-is strong enough to PREDICT colour for an unseen species. This script answers
-the second question.
+A random split leaks genus identity. StratifiedGroupKFold keeps a genus in one
+fold. The ungrouped split is also reported to quantify that leakage.
 
-Design notes
-------------
-Congeneric species share ancestry and occupy similar niches, so a random
-train/test split leaks: the model can memorise "genus X is usually white"
-from a sibling in the training fold. All headline numbers therefore use
-StratifiedGroupKFold grouped by genus, so a genus never spans a split. The
-ungrouped split is also reported to quantify how much that leakage inflates
-the score.
-
-Two baselines matter:
-  * majority class  -- the floor any classifier must beat
-  * genus prior     -- predicts a genus's most common training colour, using
-                      NO environment at all. Beating this is the real test that
-                      environment carries information beyond relatedness.
-                      Under grouped CV every test genus is unseen, so this
-                      necessarily falls back to the majority class; it is
-                      informative under the ungrouped split, where it measures
-                      how much of the apparent signal is just phylogeny.
-
-READS : Processed Data/experiments/expansion/step05b_outputs/species_color_environment_final_expanded.csv
-WRITES: Processed Data/experiments/prediction_outputs/
+Reads  : Processed Data/experiments/expansion/step05b_outputs/species_color_environment_final_expanded.csv
+Writes : Processed Data/experiments/prediction_outputs/
 """
 
 from __future__ import annotations
@@ -54,8 +33,6 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 BASE = Path("/scratch/dp23301/Thesis")
-# Primary published analysis set (n=1,438). The earlier clean set under
-# step05b_outputs_clean (n=1,174) is historical and no longer used here.
 ENV = (BASE / "Processed Data/experiments/expansion/step05b_outputs"
        / "species_color_environment_final_expanded.csv")
 OUT = BASE / "Processed Data/experiments/prediction_outputs"
@@ -65,14 +42,12 @@ CLASSES = ["WHITE", "YELLOW", "REDTYPE"]
 SEED = 42
 N_SPLITS = 5
 
-
 def load():
     df = pd.read_csv(ENV)
     df["genus"] = df["query_name"].str.split().str[0]
     df = df.dropna(subset=PCS + ["color_group"])
     df = df[df["color_group"].isin(CLASSES)].reset_index(drop=True)
     return df
-
 
 class GenusPrior:
     """Predict a genus's most common training colour; fall back to majority."""
@@ -87,7 +62,6 @@ class GenusPrior:
 
     def predict(self, genera):
         return np.array([self.map_.get(g, self.majority_) for g in genera])
-
 
 def cv_evaluate(df, grouped: bool):
     """Run cross-validation and return per-model out-of-fold predictions."""
@@ -128,7 +102,6 @@ def cv_evaluate(df, grouped: bool):
 
     return y, oof
 
-
 def score(y_true, y_pred):
     return {
         "accuracy": accuracy_score(y_true, y_pred),
@@ -141,9 +114,8 @@ def score(y_true, y_pred):
         },
     }
 
-
 def bootstrap_ci(y_true, y_pred, n_boot=2000, seed=SEED):
-    """Percentile CI for macro-F1, matching the RQ1 figure convention."""
+    """Percentile CI for macro-F1."""
     rng = np.random.default_rng(seed)
     n = len(y_true)
     stats = []
@@ -154,7 +126,6 @@ def bootstrap_ci(y_true, y_pred, n_boot=2000, seed=SEED):
         stats.append(f1_score(y_true[idx], y_pred[idx],
                               average="macro", zero_division=0))
     return float(np.percentile(stats, 2.5)), float(np.percentile(stats, 97.5))
-
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
@@ -186,7 +157,6 @@ def main():
     ].round(4)
     summary.to_csv(OUT / "prediction_cv_summary.csv", index=False)
 
-    # Detailed report + confusion for the headline configuration
     y, oof = stored[True]
     best = max(("logreg", "random_forest"),
                key=lambda m: f1_score(y, oof[m], average="macro",
@@ -205,7 +175,6 @@ def main():
         **{f"pred_{m}": oof[m] for m in oof},
     }).to_csv(OUT / "prediction_oof_predictions.csv", index=False)
 
-    # Which environmental axes carry the signal?
     X = df[PCS].to_numpy()
     model = make_pipeline(
         StandardScaler(),
@@ -234,7 +203,6 @@ def main():
     }
     (OUT / "prediction_run_metadata.json").write_text(json.dumps(meta, indent=2))
     print(f"\nSaved to {OUT}")
-
 
 if __name__ == "__main__":
     main()

@@ -23,7 +23,6 @@ PRED = {
     "baseline": EXP / "benchmark/gold_pred_baseline.csv",
 }
 
-
 def score(pred_map, gold, cat_fn):
     ids = [s for s in gold if s in pred_map]
     yt = [gold[s] for s in ids]
@@ -40,7 +39,6 @@ def score(pred_map, gold, cat_fn):
     n = len(ids)
     acc = sum(a == b for a, b in zip(yt, yp)) / n if n else 0
     return n, acc, n_uncertain
-
 
 def main():
     with open(GOLD, encoding="utf-8-sig") as f:
@@ -69,7 +67,6 @@ def main():
         w.writeheader()
         w.writerows(rows)
     print(f"\nSaved {OUT}")
-
 
 if __name__ == "__main__":
     main()

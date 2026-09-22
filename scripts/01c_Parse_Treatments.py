@@ -1,26 +1,13 @@
 #!/usr/bin/env python3
 """
-Improved parser: extract SPECIES TREATMENTS only, dropping identification-key stubs.
+Extract species treatments from Flora of India volume text, dropping key stubs.
 
-Root cause found: each species appears twice in Flora of India text —
-  (1) in a dichotomous KEY  -> abbreviated genus, garbled, NO description
-  (2) in its TREATMENT      -> full genus + author + real description
-The original parser kept BOTH, so ~1/3 of "species" were garbled key duplicates
-that later failed GBIF. This parser keeps only real treatments.
+Reads  : raw_data/FLORA OF INDIA VOL*.txt
+Writes : Processed Data/experiments/species_descriptions_treatments.csv
 
-SAFE BY DESIGN:
-  READS  : raw_data/FLORA OF INDIA VOL*.txt   (your existing text; never modified)
-  WRITES : Processed Data/experiments/species_descriptions_treatments.csv
-  Does NOT touch the pipeline. Mirrors the columns of the original
-  flora_of_india_species_descriptions.csv (species_id, volume, raw_text) plus
-  clean genus/epithet/binomial so it can flow into steps 02-05 later.
-
-A heading is accepted as a TREATMENT when:
-  - genus is a FULL word (Capital + >=2 lowercase)  [drops "A." key stubs]
-  - epithet is lowercase (>=3 letters)              [drops genus headers "Aconitum L."]
-  - the following block contains a real description  [drops any stray matches]
-Rare treatments printed with an abbreviated genus are recovered via genus
-carry-forward, but ONLY if their block has a strong description (habit + Fl./Distrib).
+A heading is a treatment when genus is a full word, epithet is lowercase, and
+the following block has a real description. Abbreviated-genus headings are
+kept only if the block has a strong description and genus can be carried forward.
 """
 
 import csv

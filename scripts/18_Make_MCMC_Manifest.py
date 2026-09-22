@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
 """
-WP4 harness -- STEP 2a: build the job-array manifest.
+Build one SLURM array task per (variant x colour x chain).
 
-Enumerates one array task per (variant x colour x chain). Running all of them as
-a SLURM array means the whole sensitivity analysis finishes in ~1 MCMC wall-clock
-instead of dozens run back-to-back.
+Reads  : Processed Data/experiments/wp4_label_variants/species_color_environment_<variant>.csv
+Writes : Processed Data/experiments/wp4_label_variants/mcmc_manifest.csv
 
-Each variant dataset is produced by 17_Build_Label_Variant.py and lives in
-Processed Data/experiments/wp4_label_variants/species_color_environment_<variant>.csv
-
-Usage
------
-  python 18_Make_MCMC_Manifest.py --variant baseline --variant qwen7b [--variant qwen72b ...]
+Usage:
+  python 18_Make_MCMC_Manifest.py --variant baseline --variant qwen7b
 """
 
 import argparse
@@ -25,7 +20,6 @@ MANIFEST = VARDIR / "mcmc_manifest.csv"
 COLORS = [("WHITE", "is_white"), ("YELLOW", "is_yellow"), ("REDTYPE", "is_redtype")]
 # 3 chains per (variant,colour) for Gelman-Rubin; distinct seeds
 CHAIN_SEEDS = {1: 42, 2: 123, 3: 456}
-
 
 def main():
     ap = argparse.ArgumentParser()
@@ -56,7 +50,6 @@ def main():
     print(f"Wrote manifest with {len(rows)} tasks -> {MANIFEST}")
     print(f"Submit with:  sbatch --array=0-{len(rows)-1} "
           f"scripts/slurm/run_19_array.slurm")
-
 
 if __name__ == "__main__":
     main()

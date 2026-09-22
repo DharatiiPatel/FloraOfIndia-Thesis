@@ -1,27 +1,15 @@
 #!/usr/bin/env python3
 """
-Recover treatment text for species lost to parsing failures.
+Recover treatment text for species lost to parse failures.
 
-Targets species whose colour is UNKNOWN because the description was empty,
-not a description, or truncated before the flowers (see 28_Diagnose /
-04a_Verify). For each such species this script:
+Targets UNKNOWN rows diagnosed as EMPTY / NOT_A_DESCRIPTION / TRUNCATED_PRE_FLOWER.
+Located-but-no-colour rows are still written so the LLM extractor can decide.
 
-  1. loads genus/epithet/volume from clean_color_categories.csv
-  2. locates the best treatment window in raw_data/FLORA OF INDIA VOL*.txt
-  3. writes a recovery CSV in the same column shape as
-     species_descriptions_treatments.csv so 02-style colour extraction can
-     run on it without changing the main pipeline
-
-A species is marked RECOVERABLE when a treatment is found AND a flower-colour
-word sits on a flower organ (heuristic from 29). Located-but-no-colour rows
-are still written (status=located_no_colour) so the LLM extractor can decide;
-not_located rows are listed but carry empty text.
-
-  READS  : Processed Data/experiments/unknown_diagnosis.csv
-                                      clean_color_categories.csv
-           raw_data/FLORA OF INDIA VOL*.txt
-  WRITES : Processed Data/experiments/recovered_treatments.csv
-                                      recovered_treatments_summary.json
+Reads  : Processed Data/experiments/unknown_diagnosis.csv
+         Processed Data/experiments/clean_color_categories.csv
+         raw_data/FLORA OF INDIA VOL*.txt
+Writes : Processed Data/experiments/recovered_treatments.csv
+         Processed Data/experiments/recovered_treatments_summary.json
 
 Usage:  python scripts/04c_Recover_Lost_Treatments.py
 """
@@ -67,7 +55,6 @@ BOUNDARY = re.compile(
     r"|(\n\s*[A-Z]{4,}(?:\s+[A-Z]{4,})*\s*\n)"
 )
 
-
 def load_volumes() -> dict[str, str]:
     vols = {}
     for path in glob.glob(str(RAW / "FLORA OF INDIA VOL*.txt")):
@@ -76,18 +63,15 @@ def load_volumes() -> dict[str, str]:
             vols[m.group(1)] = Path(path).read_text(encoding="utf-8", errors="ignore")
     return vols
 
-
 def looks_like_index(window: str) -> bool:
     if not window:
         return True
     digits = sum(c.isdigit() for c in window[:400])
     return digits > len(window[:400]) * 0.22
 
-
 def cut_at_boundary(window: str) -> str:
     m = BOUNDARY.search(window)
     return window[:m.start()] if m else window
-
 
 def locate_treatment(text: str, genus: str, epithet: str) -> str | None:
     if not genus or not epithet or not text:
@@ -105,7 +89,6 @@ def locate_treatment(text: str, genus: str, epithet: str) -> str | None:
             best, best_score = window, score
     return best if best_score >= MIN_MORPH_HITS else None
 
-
 def flower_colour_in(window: str) -> str | None:
     if not window:
         return None
@@ -117,7 +100,6 @@ def flower_colour_in(window: str) -> str | None:
         if FLOWER_ORGAN.search(wide):
             return m.group(0).lower()
     return None
-
 
 def main():
     diag = {r["species_id"]: r["cause"]
@@ -203,7 +185,6 @@ def main():
     print(f"wrote {slim.name} "
           f"({summary['n_with_text_for_extract']} rows with text for colour extraction)")
     print(f"heuristic RECOVERABLE (colour in source): {status_c['RECOVERABLE']}")
-
 
 if __name__ == "__main__":
     main()

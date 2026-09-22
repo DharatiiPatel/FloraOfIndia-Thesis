@@ -29,14 +29,12 @@ FALSE_GENERA = {
     "Leaves", "Flowers", "KEY", "Key", "Woody", "Annual", "Perennial",
 }
 
-
 def load_parser():
     spec = importlib.util.spec_from_file_location(
         "parse", BASE / "scripts" / "01c_Parse_Treatments.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
-
 
 def main():
     OUTDIR.mkdir(parents=True, exist_ok=True)
@@ -91,7 +89,6 @@ def main():
         w.writeheader()
         w.writerows(all_rows)
     print(f"\nwrote {OUT} ({len(all_rows)} treatments)")
-
 
 if __name__ == "__main__":
     main()

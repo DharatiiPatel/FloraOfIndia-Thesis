@@ -1,8 +1,6 @@
 #!/usr/bin/env Rscript
-# WP4 harness -- STEP 2b: run ONE MCMCglmm task (one variant x colour x chain).
-# Driven by the manifest + SLURM_ARRAY_TASK_ID so the whole sensitivity analysis
-# runs as a parallel job array. MCMC settings are IDENTICAL to scripts/06_MCMCglmm.R
-# so results are directly comparable to the main analysis.
+# One MCMCglmm task (variant x colour x chain) from the manifest + SLURM_ARRAY_TASK_ID.
+# MCMC settings match scripts/06_MCMCglmm.R.
 
 .libPaths(c("~/R/library", .libPaths()))
 options(stringsAsFactors = FALSE)
@@ -17,7 +15,6 @@ MANIFEST <- file.path(VARDIR, "mcmc_manifest.csv")
 OUTDIR <- file.path(VARDIR, "mcmc_chains")
 dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
 
-# identical to main analysis
 NITT   <- 1050000
 BURNIN <- 50000
 THIN   <- 100
@@ -25,7 +22,6 @@ PRIOR  <- list(R = list(V = 1, fix = 1),
                G = list(G1 = list(V = 1, nu = 0.002)))
 PC_COLS <- paste0("PC", 1:10)
 
-# which task?
 tid <- Sys.getenv("SLURM_ARRAY_TASK_ID", unset = NA)
 if (is.na(tid)) {
   args <- commandArgs(trailingOnly = TRUE)

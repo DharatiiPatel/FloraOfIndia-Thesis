@@ -32,7 +32,6 @@ SYSTEM_MESSAGE = (
     "'no flower colour mentioned'. Do NOT add explanations."
 )
 
-
 def resolve_model_path(model_id: str) -> str:
     if Path(model_id).is_dir():
         return model_id
@@ -45,7 +44,6 @@ def resolve_model_path(model_id: str) -> str:
                 return str(d)
     return model_id
 
-
 def already_done_ids(path: Path) -> set[str]:
     done = set()
     if path.exists():
@@ -53,7 +51,6 @@ def already_done_ids(path: Path) -> set[str]:
             for row in csv.DictReader(f):
                 done.add(row.get("species_id", ""))
     return done
-
 
 def infer(tokenizer, model, description: str) -> str:
     desc = (description or "")[:MAX_DESC_CHARS]
@@ -71,7 +68,6 @@ def infer(tokenizer, model, description: str) -> str:
             pad_token_id=tokenizer.eos_token_id,
         )
     return tokenizer.decode(out[0][inputs.shape[-1]:], skip_special_tokens=True).strip()
-
 
 def main():
     if not INPUT_CSV.exists():
@@ -109,7 +105,6 @@ def main():
             if n % 25 == 0:
                 print(f"Processed {n}...", flush=True)
     print(f"DONE. {n} new -> {OUTPUT_CSV}", flush=True)
-
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""Reliability chapter figures. No fabricated MCMC: forest is skipped until
-scripts/25_Reliability_Ecology.R has written reliability_mcmc_effects.csv.
-"""
+"""Reliability figures. Forest is skipped until reliability_mcmc_effects.csv exists."""
 
 from __future__ import annotations
 
@@ -32,12 +30,10 @@ TAB = ROOT / "Results" / "tables" / "reliability"
 FIG.mkdir(parents=True, exist_ok=True)
 TAB.mkdir(parents=True, exist_ok=True)
 
-
 def _save(fig, stem: str, dpi: int = 400) -> None:
     fig.savefig(FIG / f"{stem}.png", dpi=dpi, bbox_inches="tight")
     fig.savefig(FIG / f"{stem}.pdf", bbox_inches="tight")
     plt.close(fig)
-
 
 def fig_pipeline() -> None:
     fig, ax = plt.subplots(figsize=(10.2, 2.6))
@@ -67,7 +63,6 @@ def fig_pipeline() -> None:
                  color=INK, loc="left", pad=8)
     fig.tight_layout()
     _save(fig, "fig15_reliability_pipeline")
-
 
 def fig_agreement(summary: dict, rows: list[dict]) -> None:
     n = summary["primary_ecology_n"]
